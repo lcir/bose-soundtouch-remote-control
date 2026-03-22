@@ -32,6 +32,11 @@
   - local `AUX`
   - `Bluetooth`
   - online/non-local sources exposed by Bose `/sources`
+- Web source list is grouped for usability:
+  - `AUX IN 1/2/3`
+  - `Bluetooth`
+  - `Online`
+- `QPlay` placeholders are intentionally hidden from the UI
 
 ## Current Pinout
 

@@ -15,6 +15,8 @@ Cílem projektu je postavit samostatný fyzický ovladač pro `Bose SoundTouch S
 - čtení aktuální hlasitosti, zdroje a `now playing`
 - reakci na změny stavu z Bose přes `WebSocket`
 - lokální webové ovládání z telefonu nebo notebooku v téže `Wi‑Fi`
+- webové tlačítko `Wake/Standby` podle aktuálního stavu Bose
+- webový seznam zdrojů seskupený do přehledných voleb `AUX`, `Bluetooth` a `Online`
 
 ## Architektura
 
@@ -33,6 +35,7 @@ Systém je rozdělený na pět hlavních částí:
 - `ControlWebServer`
   - v normálním režimu poskytuje LAN web UI
   - zobrazuje stav a volá stejné akce jako fyzické ovládání
+  - seskupuje syrové Bose zdroje do jednoduššího webového modelu
 - `UiRenderer`
   - vykresluje normální provozní obrazovku
   - vykresluje setup režim

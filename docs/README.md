@@ -2,6 +2,8 @@
 
 Tento adresář obsahuje technickou dokumentaci pro `ESP32` ovladač zesilovače `Bose SoundTouch SA-5`.
 
+English version: [docs/en/README.md](/Users/peny/Development/Projects/boser-remote-control/docs/en/README.md)
+
 ## Obsah
 
 - [Přehled projektu](/Users/peny/Development/Projects/boser-remote-control/docs/overview.md)
@@ -17,6 +19,7 @@ Tento adresář obsahuje technickou dokumentaci pro `ESP32` ovladač zesilovače
 - Všechny fyzické ovládací prvky jsou připojené jen k `ESP32`.
 - `ESP32` posílá do Bose lokální síťové příkazy přes `HTTP` a poslouchá změny přes `WebSocket`.
 - V normálním režimu `ESP32` zároveň poskytuje lokální webové ovládání v LAN.
+- Web aktuálně nabízí dynamické `Wake/Standby` a seskupené zdroje `AUX`, `Bluetooth`, `Online`.
 
 ## Soubory v projektu
 

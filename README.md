@@ -51,8 +51,8 @@ In normal station mode, the ESP32 also serves a local control page on its own IP
 Open `http://<esp32-ip>/` in a browser on the same network to:
 
 - change volume
-- switch to the next selectable source, including `AUX`, online inputs and `Bluetooth`
-- directly select any visible source exposed by Bose
+- switch to the next logical source, including `AUX`, `Bluetooth` and grouped `Online`
+- directly select the grouped sources exposed by the web UI
 - send dynamic `Wake` / `Standby`
 - view current Bose state
 

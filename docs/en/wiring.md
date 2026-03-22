@@ -1,0 +1,143 @@
+# Wiring and Connections
+
+This document describes the electrical wiring of the `v1` prototype. The default reference board is `LOLIN/Wemos S2 Mini`. The Bose amplifier is not connected to the `ESP32` by any wire. Communication with the `SA-5` is done exclusively over `Wi-Fi`.
+
+## Basic Principle
+
+- the `ESP32` reads local controls
+- the `ESP32` displays status on the `OLED`
+- the `ESP32` sends commands to the `Bose SA-5` over the network
+
+That means the only electrical parts on the desk or inside the enclosure are:
+
+- `ESP32` development board
+- `OLED SSD1306 128x64 I2C`
+- rotary encoder
+- `Source` button
+- `Standby` button
+- two-color `red/green` LED or an illuminated button with two LED branches
+
+## Pin Map
+
+Default pins are defined in [PinConfig.h](/Users/peny/Development/Projects/boser-remote-control/include/PinConfig.h).
+
+| Function | ESP32 pin | Note |
+|---|---:|---|
+| OLED `SDA` | `GPIO33` | `I2C` data |
+| OLED `SCL` | `GPIO35` | `I2C` clock |
+| Encoder `A` | `GPIO7` | quadrature input |
+| Encoder `B` | `GPIO9` | quadrature input |
+| `Source` button | `GPIO5` | active in `LOW` |
+| `Standby` button | `GPIO11` | active in `LOW`, also used as service hold during boot |
+| LED `Red` | `GPIO16` | output for the red branch |
+| LED `Green` | `GPIO18` | output for the green branch |
+
+## Power
+
+### `LOLIN/Wemos S2 Mini` Variant
+
+- power the `ESP32` from `USB 5 V`
+- power the `OLED` from the board `3.3 V`
+- buttons and encoder are passive inputs tied to `GND`
+
+### Important Notes
+
+- do not feed `5 V` directly into `GPIO`
+- if a specific `OLED` module only supports `5 V` logic, verify compatibility with `3.3 V`
+- common `GND` must be connected between the `ESP32`, `OLED`, encoder, and buttons
+
+## Wire Connections
+
+### `SSD1306 I2C` OLED
+
+| OLED pin | Connect to |
+|---|---|
+| `VCC` | `3.3 V` |
+| `GND` | `GND` |
+| `SDA` | `GPIO33` |
+| `SCL` | `GPIO35` |
+
+## Rotary Encoder
+
+Typical pins are `A`, `B`, `COM`, and sometimes a built-in push button `SW`.
+
+| Encoder pin | Connect to |
+|---|---|
+| `A` | `GPIO7` |
+| `B` | `GPIO9` |
+| `COM` | `GND` |
+| `SW` | not connected in `v1` |
+
+The firmware uses internal pull-ups, so external resistors are not required for a typical mechanical encoder.
+
+## Buttons
+
+Each button is wired as a simple switch to ground.
+
+| Button | One contact | Other contact |
+|---|---|---|
+| `Source` | `GPIO5` | `GND` |
+| `Standby` | `GPIO11` | `GND` |
+
+The firmware uses `INPUT_PULLUP`, so the idle state is `HIGH` and a press pulls the input to `LOW`.
+
+## Two-Color LED
+
+The default firmware expects two independently controlled LED branches.
+
+| LED contact | Connect to |
+|---|---|
+| `Red` | `GPIO16` through a series resistor |
+| `Green` | `GPIO18` through a series resistor |
+| `Common` | `GND` for a common-cathode variant |
+
+Notes:
+
+- the default firmware logic is `active HIGH`
+- if you use a common-anode LED or another active state, change `POWER_LED_ACTIVE_HIGH` in [PinConfig.h](/Users/peny/Development/Projects/boser-remote-control/include/PinConfig.h)
+- add a current-limiting resistor to each LED branch, typically `220R` to `1k`
+
+## Simple Block Diagram
+
+```text
+                 +----------------------+
+                 |   Bose SoundTouch    |
+                 |       SA-5           |
+                 |   Wi-Fi only link    |
+                 +----------^-----------+
+                            |
+                         Wi-Fi LAN
+                            |
++--------------------------------------------------+
+|                      ESP32                       |
+|                                                  |
+|  GPIO33 <------ SDA -------- OLED 128x64         |
+|  GPIO35 <------ SCL -------- OLED 128x64         |
+|  3V3    ------> VCC -------- OLED                |
+|  GND    ------> GND -------- OLED                |
+|                                                  |
+|  GPIO7  <------ A ---------- Encoder             |
+|  GPIO9  <------ B ---------- Encoder             |
+|  GND    ------> COM -------- Encoder             |
+|                                                  |
+|  GPIO5  <------ Source button ---> GND           |
+|  GPIO11 <------ Standby button --> GND           |
+|  GPIO16 ------> Red LED                          |
+|  GPIO18 ------> Green LED                        |
+|                                                  |
++--------------------------------------------------+
+```
+
+## Recommendations For A Real Build Or Enclosure
+
+- keep `I2C` wires as short as possible
+- use clean wiring for buttons and encoder, especially if the wires are longer
+- if the device goes into a metal enclosure, verify `Wi-Fi` quality
+- place the `ESP32` so the antenna is not shielded by metal
+
+## Not Part Of `v1` Wiring
+
+- no relay for disconnecting Bose power
+- no analog audio output from the `ESP32`
+- no connection to Bose `AUX` connectors
+- no physical modification of the `SA-5` electronics

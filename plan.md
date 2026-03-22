@@ -26,10 +26,17 @@ Postavit samostatný fyzický ovladač pro `Bose SoundTouch SA-5`, který bude p
 
 - enkodér mění hlasitost
 - změny hlasitosti se coalescují a odesílají po krátké prodlevě
-- `Source` přepíná na další dostupný zdroj
-- `Standby` vypíná `SoundTouch`
+- `Source` přepíná na další logický zdroj
+- fyzické `Standby` tlačítko vypíná `SoundTouch`
 - stav zařízení se zobrazuje na dvoubarevné LED
-- stejné základní ovládání bude dostupné i přes lokální web
+- stejné základní ovládání je dostupné i přes lokální web
+- web má dynamické tlačítko `Wake/Standby`
+- web seskupuje zdroje do přehledných položek:
+  - `AUX IN 1`
+  - `AUX IN 2`
+  - `AUX IN 3`
+  - `Bluetooth`
+  - `Online`
 
 ## UI
 
@@ -79,10 +86,13 @@ Použité endpointy:
 Pravidla:
 
 - zdroje načítat dynamicky z `/sources`
-- přepínat jen zdroje ve stavu `READY`
+- uživatelské UI seskupuje syrové Bose zdroje do logických voleb
+- `QPlay` a technické placeholdery v UI skrýt
+- `Bluetooth` i `Online` mohou být volitelné i mimo stav `READY`, pokud to dává smysl podle Bose zdrojů
 - změny z websocketu neparsovat přímo do stavu, ale vyvolat refresh přes `HTTP`
 - při pádu websocketu přejít do poll režimu
 - pro vypnutí použít explicitní `standby/off`, ne `POWER` toggle
+- pro probuzení zkusit `POWER` a při potřebě fallback přes výběr vhodného zdroje
 - lokální web bude používat stejné interní akce jako fyzické ovládání
 
 ## Elektrické zapojení v1
@@ -117,6 +127,8 @@ V repozitáři je připravená první implementace:
 - `PlatformIO` projekt
 - captive portal
 - lokální ovládací web
+- webové `Wake/Standby`
+- seskupené zdroje `AUX/Bluetooth/Online`
 - Bose `HTTP` a `WebSocket` klient
 - OLED renderer
 - input vrstva pro enkodér a tlačítka

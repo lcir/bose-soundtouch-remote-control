@@ -126,7 +126,7 @@ Při přijetí notifikací `volumeUpdated`, `sourcesUpdated`, `nowPlayingUpdated
 
 ### Tlačítka
 
-- `Source`: další dostupný zdroj
+- `Source`: další logický zdroj
 - `Standby`: vypnutí `SoundTouch` do standby přes `/standby`
 
 ### Web UI
@@ -136,9 +136,11 @@ Při přijetí notifikací `volumeUpdated`, `sourcesUpdated`, `nowPlayingUpdated
 - hlasitost se odesílá přes krátce zpožděné `POST /api/volume`
 - hlavní power tlačítko se přepíná mezi `Wake` a `Standby`
 - barva power tlačítka sleduje stav:
-  - `green` pro probuzení ze standby
-  - `red` pro uspání
-- rotace zdrojů i webový seznam zahrnují vedle `AUX` i `Bluetooth` a vhodné online zdroje, pokud je Bose vystavuje přes `/sources`
+  - `red` pro probuzení ze standby
+  - `green` pro uspání
+- wake se snaží zařízení probudit přes `POWER` key a v případě potřeby použije fallback přes výběr vhodného zdroje
+- rotace zdrojů i webový seznam zahrnují vedle `AUX` i `Bluetooth` a jednu seskupenou položku `Online`
+- syrové položky jako `QPlay` nebo technické placeholdery se ve webovém UI nezobrazují
 
 ### Stavová LED
 
