@@ -2,6 +2,12 @@
 
 Tento dokument popisuje elektrické zapojení `v1` prototypu. Výchozí referenční deska je `LOLIN/Wemos S2 Mini`. Bose zesilovač se k `ESP32` nepřipojuje žádným vodičem. Komunikace s `SA-5` probíhá výhradně po `Wi‑Fi`.
 
+## Cely pinout a schema
+
+![Projektovy pinout LOLIN Wemos S2 Mini a napojene komponenty](assets/wemos-s2-mini-project-wiring.svg)
+
+Obrazek ukazuje cely pinout `LOLIN/Wemos S2 Mini`. Jen u pinu pouzitych v tomto projektu je dopsane konkretni zapojeni `OLED`, enkoderu, tlacitek a dvoubarevne LED.
+
 ## Základní princip
 
 - `ESP32` čte lokální ovládací prvky
@@ -87,15 +93,17 @@ Výchozí firmware počítá se dvěma samostatně řízenými LED větvemi.
 
 | LED kontakt | Připojit na |
 |---|---|
-| `Red` | `GPIO16` přes sériový rezistor |
-| `Green` | `GPIO18` přes sériový rezistor |
+| `Red` | `GPIO16` -> samostatny seriovy rezistor -> cervena anoda LED |
+| `Green` | `GPIO18` -> samostatny seriovy rezistor -> zelena anoda LED |
 | `Common` | `GND` pro common-cathode variantu |
 
 Poznámka:
 
 - firmware má výchozí logiku `active HIGH`
 - pokud použiješ common-anode LED nebo jiný aktivní stav, změň `POWER_LED_ACTIVE_HIGH` v [PinConfig.h](/Users/peny/Development/Projects/boser-remote-control/include/PinConfig.h)
-- ke každé LED větvi přidej proudový rezistor, typicky `220R` až `1k`
+- kazda LED vetev musi mit vlastni seriovy proudovy rezistor
+- rezistor patri mezi `GPIO` a prislusny barevny pin LED, ne jen nekam na spolecnou vetev
+- typicky pouzij `220R` az `1k`, pro prototyp rozumne treba `330R`
 
 ## Jednoduché blokové schéma
 
@@ -122,8 +130,9 @@ Poznámka:
 |                                                  |
 |  GPIO5  <------ Source button ---> GND           |
 |  GPIO11 <------ Standby button --> GND           |
-|  GPIO16 ------> Red LED                          |
-|  GPIO18 ------> Green LED                        |
+|  GPIO16 ------> [330R] --> Red LED anoda        |
+|  GPIO18 ------> [330R] --> Green LED anoda      |
+|  GND    ------> Common cathode LED              |
 |                                                  |
 +--------------------------------------------------+
 ```

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="793" viewBox="0 0 1200 793">
+  <defs>
+    <style>
+      .box { fill: rgba(255,250,241,0.96); stroke: #d6c5a7; stroke-width: 2.5; rx: 16; ry: 16; }
+      .title { font: 700 19px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 500 15px Arial, sans-serif; fill: #334155; }
+      .note { font: 600 14px Arial, sans-serif; fill: #7c2d12; }
+      .line { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+      .sig { stroke: #0f766e; }
+      .i2c { stroke: #2563eb; }
+      .pwr { stroke: #ef4444; }
+      .gnd { stroke: #475569; }
+      .hl-sig { fill: rgba(15,118,110,0.16); stroke: #0f766e; stroke-width: 2.5; rx: 10; ry: 10; }
+      .hl-i2c { fill: rgba(37,99,235,0.16); stroke: #2563eb; stroke-width: 2.5; rx: 10; ry: 10; }
+      .hl-pwr { fill: rgba(239,68,68,0.16); stroke: #ef4444; stroke-width: 2.5; rx: 10; ry: 10; }
+      .hl-gnd { fill: rgba(71,85,105,0.16); stroke: #475569; stroke-width: 2.5; rx: 10; ry: 10; }
+      .caption { font: 600 13px Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <image href="wemos-s2-mini-pinout-base.png" x="0" y="0" width="1200" height="793"/>
+
+  <!-- Highlights on referenced pinout -->
+  <rect class="hl-pwr" x="500" y="450" width="72" height="28"/>
+  <rect class="hl-gnd" x="906" y="471" width="86" height="28"/>
+  <rect class="hl-gnd" x="907" y="691" width="86" height="28"/>
+  <rect class="hl-i2c" x="905" y="286" width="96" height="28"/>
+  <rect class="hl-i2c" x="905" y="340" width="96" height="28"/>
+  <rect class="hl-sig" x="500" y="338" width="72" height="28"/>
+  <rect class="hl-sig" x="500" y="392" width="72" height="28"/>
+  <rect class="hl-sig" x="500" y="445" width="72" height="28"/>
+  <rect class="hl-sig" x="907" y="445" width="96" height="28"/>
+  <rect class="hl-sig" x="907" y="392" width="96" height="28"/>
+
+  <!-- Correct source/standby button pins on lower left block -->
+  <rect class="hl-sig" x="500" y="614" width="72" height="28"/>
+  <rect class="hl-sig" x="500" y="668" width="72" height="28"/>
+
+  <!-- OLED -->
+  <rect class="box" x="42" y="105" width="255" height="145"/>
+  <text class="title" x="110" y="135">OLED 0.96&quot; I2C</text>
+  <text class="text" x="62" y="165">VCC -> 3.3V</text>
+  <text class="text" x="62" y="191">GND -> GND</text>
+  <text class="text" x="62" y="217">SDA -> GPIO33</text>
+  <text class="text" x="62" y="243">SCL -> GPIO35</text>
+  <path class="line pwr" d="M297 154 C370 154 420 165 500 463"/>
+  <path class="line gnd" d="M297 180 C380 180 495 250 906 485"/>
+  <path class="line i2c" d="M297 206 C410 206 540 240 905 355"/>
+  <path class="line i2c" d="M297 232 C410 232 540 220 905 300"/>
+
+  <!-- Encoder -->
+  <rect class="box" x="55" y="300" width="235" height="125"/>
+  <text class="title" x="101" y="332">Rotacni enkoder</text>
+  <text class="text" x="75" y="362">A -> GPIO7</text>
+  <text class="text" x="75" y="388">B -> GPIO9</text>
+  <text class="text" x="75" y="414">COM -> GND</text>
+  <path class="line sig" d="M290 356 C390 356 440 356 500 351"/>
+  <path class="line sig" d="M290 382 C390 382 440 392 500 405"/>
+  <path class="line gnd" d="M290 408 C390 408 520 430 906 485"/>
+
+  <!-- Buttons -->
+  <rect class="box" x="40" y="510" width="310" height="145"/>
+  <text class="title" x="120" y="542">Tlacitka</text>
+  <text class="text" x="62" y="572">Source -> GPIO5 -> tlacitko -> GND</text>
+  <text class="text" x="62" y="598">Standby -> GPIO11 -> tlacitko -> GND</text>
+  <text class="text" x="62" y="624">Firmware pouziva interni pull-upy.</text>
+  <path class="line sig" d="M350 566 C410 566 450 590 500 628"/>
+  <path class="line sig" d="M350 592 C410 592 450 640 500 682"/>
+  <path class="line gnd" d="M350 618 C440 618 610 620 906 705"/>
+
+  <!-- LED -->
+  <rect class="box" x="885" y="540" width="280" height="160"/>
+  <text class="title" x="960" y="572">Dvoubarevna LED</text>
+  <text class="text" x="905" y="602">GPIO16 -> rezistor -> cervena anoda</text>
+  <text class="text" x="905" y="628">GPIO18 -> rezistor -> zelena anoda</text>
+  <text class="text" x="905" y="654">Common cathode -> GND</text>
+  <text class="note" x="905" y="684">Kazda barevna vetev ma vlastni seriovy rezistor.</text>
+  <path class="line sig" d="M907 459 C930 459 970 500 995 540"/>
+  <path class="line sig" d="M907 406 C955 406 980 470 1030 540"/>
+  <path class="line gnd" d="M906 705 C965 705 980 690 1020 690"/>
+
+  <!-- Bose note -->
+  <rect class="box" x="850" y="88" width="300" height="90"/>
+  <text class="title" x="890" y="118">Bose SoundTouch SA-5</text>
+  <text class="text" x="870" y="146">Neni propojen zadnym vodičem s ESP32.</text>
+  <text class="text" x="870" y="170">Komunikace probiha jen pres Wi-Fi LAN.</text>
+
+  <text class="caption" x="40" y="756">Podklad pinoutu je prevzaty z referencniho layoutu, ktery uzivatel poslal jako spravny vzor.</text>
+</svg>

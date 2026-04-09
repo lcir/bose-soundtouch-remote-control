@@ -20,6 +20,7 @@ English version: [docs/en/README.md](/Users/peny/Development/Projects/boser-remo
 - `ESP32` posílá do Bose lokální síťové příkazy přes `HTTP` a poslouchá změny přes `WebSocket`.
 - V normálním režimu `ESP32` zároveň poskytuje lokální webové ovládání v LAN.
 - Web aktuálně nabízí dynamické `Wake/Standby` a seskupené zdroje `AUX`, `Bluetooth`, `Online`.
+- [wiring.md](/Users/peny/Development/Projects/boser-remote-control/docs/wiring.md) nově obsahuje i obrazek s projektovym pinoutem `LOLIN/Wemos S2 Mini` a napojenymi komponentami.
 
 ## Soubory v projektu
 

@@ -16,6 +16,7 @@ This directory contains the English technical documentation for the `ESP32` cont
 - All physical controls are connected only to the `ESP32`.
 - The `ESP32` sends local network commands to Bose over `HTTP` and listens for changes over `WebSocket`.
 - In normal mode the `ESP32` also provides a local web control UI on the LAN.
+- [wiring.md](/Users/peny/Development/Projects/boser-remote-control/docs/en/wiring.md) now also includes a project pinout diagram for `LOLIN/Wemos S2 Mini` with connected components.
 
 ## Project Files
 

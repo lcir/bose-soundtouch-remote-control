@@ -2,6 +2,12 @@
 
 This document describes the electrical wiring of the `v1` prototype. The default reference board is `LOLIN/Wemos S2 Mini`. The Bose amplifier is not connected to the `ESP32` by any wire. Communication with the `SA-5` is done exclusively over `Wi-Fi`.
 
+## Full Pinout And Diagram
+
+![Project pinout for LOLIN Wemos S2 Mini and connected components](../assets/wemos-s2-mini-project-wiring.svg)
+
+The image shows the full `LOLIN/Wemos S2 Mini` pinout. Only the pins used by this project carry the extra wiring annotations for the `OLED`, encoder, buttons, and bi-color LED.
+
 ## Basic Principle
 
 - the `ESP32` reads local controls
@@ -87,15 +93,17 @@ The default firmware expects two independently controlled LED branches.
 
 | LED contact | Connect to |
 |---|---|
-| `Red` | `GPIO16` through a series resistor |
-| `Green` | `GPIO18` through a series resistor |
+| `Red` | `GPIO16` -> dedicated series resistor -> red LED anode |
+| `Green` | `GPIO18` -> dedicated series resistor -> green LED anode |
 | `Common` | `GND` for a common-cathode variant |
 
 Notes:
 
 - the default firmware logic is `active HIGH`
 - if you use a common-anode LED or another active state, change `POWER_LED_ACTIVE_HIGH` in [PinConfig.h](/Users/peny/Development/Projects/boser-remote-control/include/PinConfig.h)
-- add a current-limiting resistor to each LED branch, typically `220R` to `1k`
+- each LED branch must have its own dedicated current-limiting resistor
+- the resistor belongs between the `GPIO` pin and the respective LED color pin, not on a shared branch
+- typical values are `220R` to `1k`; `330R` is a sensible prototype default
 
 ## Simple Block Diagram
 
@@ -122,8 +130,9 @@ Notes:
 |                                                  |
 |  GPIO5  <------ Source button ---> GND           |
 |  GPIO11 <------ Standby button --> GND           |
-|  GPIO16 ------> Red LED                          |
-|  GPIO18 ------> Green LED                        |
+|  GPIO16 ------> [330R] --> Red LED anode        |
+|  GPIO18 ------> [330R] --> Green LED anode      |
+|  GND    ------> Common cathode LED              |
 |                                                  |
 +--------------------------------------------------+
 ```
