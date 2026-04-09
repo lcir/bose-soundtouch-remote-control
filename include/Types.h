@@ -40,3 +40,15 @@ struct BoseState {
   String track;
   String artist;
 };
+
+struct UiMenuItem {
+  String label;
+  bool enabled = true;
+};
+
+struct UiMenuModel {
+  String title;
+  std::vector<UiMenuItem> items;
+  int selectedIndex = 0;
+  String detail;
+};

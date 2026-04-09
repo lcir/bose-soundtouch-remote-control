@@ -6,7 +6,7 @@ This document describes the electrical wiring of the `v1` prototype. The default
 
 ![Project pinout for LOLIN Wemos S2 Mini and connected components](../assets/wemos-s2-mini-project-wiring.svg)
 
-The image shows the full `LOLIN/Wemos S2 Mini` pinout. Only the pins used by this project carry the extra wiring annotations for the `OLED`, encoder, buttons, and bi-color LED.
+The image shows the full `LOLIN/Wemos S2 Mini` pinout. Only the pins used by this project carry the extra wiring annotations for the `OLED`, encoder, encoder button, and status LED.
 
 ## Basic Principle
 
@@ -19,9 +19,8 @@ That means the only electrical parts on the desk or inside the enclosure are:
 - `ESP32` development board
 - `OLED SSD1306 128x64 I2C`
 - rotary encoder
-- `Source` button
-- `Standby` button
-- two-color `red/green` LED or an illuminated button with two LED branches
+- encoder push button
+- single status LED
 
 ## Pin Map
 
@@ -33,10 +32,8 @@ Default pins are defined in [PinConfig.h](/Users/peny/Development/Projects/boser
 | OLED `SCL` | `GPIO35` | `I2C` clock |
 | Encoder `A` | `GPIO7` | quadrature input |
 | Encoder `B` | `GPIO9` | quadrature input |
-| `Source` button | `GPIO5` | active in `LOW` |
-| `Standby` button | `GPIO11` | active in `LOW`, also used as service hold during boot |
-| LED `Red` | `GPIO16` | output for the red branch |
-| LED `Green` | `GPIO18` | output for the green branch |
+| Encoder button `SW` | `GPIO11` | active in `LOW`, also used as service hold during boot |
+| Status LED | `GPIO18` | LED output |
 
 ## Power
 
@@ -72,37 +69,35 @@ Typical pins are `A`, `B`, `COM`, and sometimes a built-in push button `SW`.
 | `A` | `GPIO7` |
 | `B` | `GPIO9` |
 | `COM` | `GND` |
-| `SW` | not connected in `v1` |
+| `SW` | `GPIO11` |
 
 The firmware uses internal pull-ups, so external resistors are not required for a typical mechanical encoder.
 
-## Buttons
+## Encoder Button
 
-Each button is wired as a simple switch to ground.
+The built-in encoder push button is wired as a simple switch to ground.
 
-| Button | One contact | Other contact |
-|---|---|---|
-| `Source` | `GPIO5` | `GND` |
-| `Standby` | `GPIO11` | `GND` |
+| Contact | Connect to |
+|---|---|
+| `SW` | `GPIO11` |
+| other switch contact | `GND` |
 
 The firmware uses `INPUT_PULLUP`, so the idle state is `HIGH` and a press pulls the input to `LOW`.
 
-## Two-Color LED
+## Status LED
 
-The default firmware expects two independently controlled LED branches.
+The default firmware expects one independently controlled LED.
 
 | LED contact | Connect to |
 |---|---|
-| `Red` | `GPIO16` -> dedicated series resistor -> red LED anode |
-| `Green` | `GPIO18` -> dedicated series resistor -> green LED anode |
-| `Common` | `GND` for a common-cathode variant |
+| `Anode` | `GPIO18` -> dedicated series resistor -> LED |
+| `Cathode` | `GND` |
 
 Notes:
 
 - the default firmware logic is `active HIGH`
-- if you use a common-anode LED or another active state, change `POWER_LED_ACTIVE_HIGH` in [PinConfig.h](/Users/peny/Development/Projects/boser-remote-control/include/PinConfig.h)
-- each LED branch must have its own dedicated current-limiting resistor
-- the resistor belongs between the `GPIO` pin and the respective LED color pin, not on a shared branch
+- if you use another active state, change `STATUS_LED_ACTIVE_HIGH` in [PinConfig.h](/Users/peny/Development/Projects/boser-remote-control/include/PinConfig.h)
+- the resistor belongs between `GPIO18` and the LED
 - typical values are `220R` to `1k`; `330R` is a sensible prototype default
 
 ## Simple Block Diagram
@@ -128,11 +123,9 @@ Notes:
 |  GPIO9  <------ B ---------- Encoder             |
 |  GND    ------> COM -------- Encoder             |
 |                                                  |
-|  GPIO5  <------ Source button ---> GND           |
-|  GPIO11 <------ Standby button --> GND           |
-|  GPIO16 ------> [330R] --> Red LED anode        |
-|  GPIO18 ------> [330R] --> Green LED anode      |
-|  GND    ------> Common cathode LED              |
+|  GPIO11 <------ Encoder SW -----> GND            |
+|  GPIO18 ------> [330R] --> LED anode            |
+|  GND    ------> LED cathode                     |
 |                                                  |
 +--------------------------------------------------+
 ```

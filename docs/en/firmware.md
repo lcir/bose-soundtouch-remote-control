@@ -69,7 +69,7 @@ The data model is defined in [Types.h](/Users/peny/Development/Projects/boser-re
 
 Service return to setup mode:
 
-- hold the `standby` button during startup for roughly `1.5 s`
+- hold the encoder button during startup for roughly `1.5 s`
 
 ## Web Interface
 
@@ -123,11 +123,15 @@ When notifications such as `volumeUpdated`, `sourcesUpdated`, or `nowPlayingUpda
 - every step changes the target volume by `1`
 - sending to Bose is delayed by `100 ms`
 - fast rotation therefore does not create dozens of immediate requests
+- a short press opens the OLED menu
+- the menu contains `Volume`, `Source`, and `Power`
+- confirming a submenu choice closes the menu and returns control to idle volume mode
+- the menu closes automatically after a few seconds of inactivity
 
-### Buttons
+### Encoder Button
 
-- `Source`: next available source
-- `Standby`: puts `SoundTouch` into standby through `/standby`
+- opens the menu and confirms selections
+- also serves as the boot-time service hold for returning to setup mode
 
 ### Web UI
 
@@ -142,9 +146,8 @@ When notifications such as `volumeUpdated`, `sourcesUpdated`, or `nowPlayingUpda
 
 ### Status LED
 
-- `red`: Bose is in `standby/off` state or unavailable
-- `green`: Bose is powered on and available
-- the firmware assumes two separately controlled `red/green` LED branches
+- the LED is on when Bose is powered on and available
+- the LED is off when Bose is in `standby/off` state or unavailable
 
 ### Display
 
@@ -155,6 +158,12 @@ The normal screen shows:
 - current source
 - volume and `mute`
 - a short `artist/track` line
+
+The menu screen shows:
+
+- the menu or submenu title
+- the currently highlighted item
+- a short hint or status line at the bottom
 
 ## Error Handling
 
@@ -167,5 +176,5 @@ The normal screen shows:
 - encoder direction
 - exact pins for the board in use
 - OLED orientation
-- physical placement of buttons
+- physical placement of the encoder and its push button
 - latency and possible volume step tuning

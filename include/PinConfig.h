@@ -11,12 +11,11 @@ constexpr uint32_t DISPLAY_I2C_CLOCK_HZ = 400000;
 
 constexpr int PIN_ENCODER_A = 7;
 constexpr int PIN_ENCODER_B = 9;
+constexpr int PIN_ENCODER_BUTTON = 11;
 
 constexpr int PIN_BUTTON_SOURCE = 5;
-constexpr int PIN_BUTTON_POWER = 11;
-constexpr int PIN_LED_POWER_RED = 16;
-constexpr int PIN_LED_POWER_GREEN = 18;
-constexpr bool POWER_LED_ACTIVE_HIGH = true;
+constexpr int PIN_LED_STATUS = 18;
+constexpr bool STATUS_LED_ACTIVE_HIGH = true;
 
 constexpr unsigned long BOOT_SERVICE_HOLD_MS = 1500;
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 25;

@@ -13,6 +13,10 @@ class UiRenderer {
                     bool wifiConnected,
                     const String& overlayText,
                     const String& statusHint);
+  void renderMenu(const BoseState& state,
+                  bool wifiConnected,
+                  const UiMenuModel& menu,
+                  const String& statusHint);
   void renderSetup(const String& apName, const String& apIp, const String& message);
 
  private:
@@ -21,4 +25,3 @@ class UiRenderer {
   U8G2_SSD1306_128X64_NONAME_F_HW_I2C _display =
       U8G2_SSD1306_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
 };
-

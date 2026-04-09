@@ -9,9 +9,8 @@ The goal of this project is to build a standalone physical controller for the `B
 - home `Wi-Fi` and `Bose` host setup through a captive portal
 - basic status display on a `128x64 OLED`
 - volume control with a rotary encoder
-- source switching with a single button
-- sending a `standby/off` command
-- status indication with a two-color `red/green` LED
+- `Volume`, `Source`, and `Power` control through an encoder-button menu
+- status indication with a single status LED
 - reading current volume, source, and `now playing`
 - reacting to Bose state changes over `WebSocket`
 - local web control from a phone or laptop on the same `Wi-Fi`
@@ -21,8 +20,8 @@ The goal of this project is to build a standalone physical controller for the `B
 The system is split into five main parts:
 
 - `InputController`
-  - reads the encoder and button states
-  - handles button debounce
+  - reads the encoder and encoder push switch
+  - handles press debounce
 - `BoseClient`
   - sends `HTTP` commands to Bose
   - reads `/sources`, `/volume`, `/now_playing`
@@ -41,7 +40,7 @@ The system is split into five main parts:
 
 ### 1. Setup Mode
 
-Used on first boot or after holding the service button during boot. The `ESP32` creates its own `AP` and waits for configuration to be saved.
+Used on first boot or after holding the encoder button during boot. The `ESP32` creates its own `AP` and waits for configuration to be saved.
 
 ### 2. Normal Mode
 
@@ -49,7 +48,7 @@ The `ESP32` joins the home network, connects to the `Bose SA-5`, keeps the displ
 
 ## Event Flow
 
-1. The user turns the encoder, presses a button, or uses the local web UI.
+1. The user turns the encoder, clicks the encoder button, or uses the local web UI.
 2. The `ESP32` converts the action into a Bose network command.
 3. Bose returns state via `HTTP` or pushes a change over `WebSocket`.
 4. The `ESP32` fetches the latest data and redraws the display.

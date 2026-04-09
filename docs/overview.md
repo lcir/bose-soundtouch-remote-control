@@ -9,9 +9,8 @@ Cílem projektu je postavit samostatný fyzický ovladač pro `Bose SoundTouch S
 - nastavení domácí `Wi‑Fi` a `Bose` hostu přes captive portal
 - zobrazení základního stavu na `OLED 128x64`
 - změnu hlasitosti rotačním enkodérem
-- přepínání zdrojů jedním tlačítkem
-- odeslání příkazu `standby/off`
-- indikaci stavu přes dvoubarevnou `red/green` LED
+- ovládání `Volume`, `Source` a `Power` přes menu na tlačítku encoderu
+- indikaci stavu přes jednu stavovou LED
 - čtení aktuální hlasitosti, zdroje a `now playing`
 - reakci na změny stavu z Bose přes `WebSocket`
 - lokální webové ovládání z telefonu nebo notebooku v téže `Wi‑Fi`
@@ -23,8 +22,8 @@ Cílem projektu je postavit samostatný fyzický ovladač pro `Bose SoundTouch S
 Systém je rozdělený na pět hlavních částí:
 
 - `InputController`
-  - čte stav enkodéru a tlačítek
-  - dělá debounce tlačítek
+  - čte stav enkodéru a tlačítka encoderu
+  - dělá debounce stisku
 - `BoseClient`
   - odesílá `HTTP` příkazy na Bose
   - čte `/sources`, `/volume`, `/now_playing`
@@ -44,7 +43,7 @@ Systém je rozdělený na pět hlavních částí:
 
 ### 1. Setup režim
 
-Použije se při prvním startu nebo po servisním podržení tlačítka při bootu. `ESP32` vytvoří vlastní `AP` a čeká na uložení konfigurace.
+Použije se při prvním startu nebo po servisním podržení tlačítka encoderu při bootu. `ESP32` vytvoří vlastní `AP` a čeká na uložení konfigurace.
 
 ### 2. Normální režim
 
@@ -52,7 +51,7 @@ Použije se při prvním startu nebo po servisním podržení tlačítka při bo
 
 ## Tok událostí
 
-1. Uživatel otočí enkodérem, stiskne tlačítko nebo použije lokální web.
+1. Uživatel otočí enkodérem, klikne encoder nebo použije lokální web.
 2. `ESP32` převede akci na síťový příkaz Bose.
 3. Bose vrátí stav přes `HTTP` nebo pošle změnu přes `WebSocket`.
 4. `ESP32` načte aktuální data a překreslí displej.

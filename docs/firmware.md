@@ -69,7 +69,7 @@ Datový model je definovaný v [Types.h](/Users/peny/Development/Projects/boser-
 
 Servisní návrat do setup režimu:
 
-- při startu podržet `standby` tlačítko přibližně `1.5 s`
+- při startu podržet tlačítko encoderu přibližně `1.5 s`
 
 ## Web rozhraní
 
@@ -123,11 +123,15 @@ Při přijetí notifikací `volumeUpdated`, `sourcesUpdated`, `nowPlayingUpdated
 - každý krok mění cílovou hlasitost o `1`
 - odeslání na Bose je zpožděné o `100 ms`
 - rychlé otáčení tedy nevytváří desítky bezprostředních requestů
+- krátký stisk otevře menu na OLED
+- menu má položky `Volume`, `Source`, `Power`
+- po potvrzení submenu se menu zavře a ovládání se vrátí na hlasitost
+- při neaktivitě se menu po několika sekundách samo zavře
 
-### Tlačítka
+### Tlačítko encoderu
 
-- `Source`: další logický zdroj
-- `Standby`: vypnutí `SoundTouch` do standby přes `/standby`
+- používá se pro otevření menu a potvrzení volby
+- při bootu slouží i jako servisní hold pro návrat do setup režimu
 
 ### Web UI
 
@@ -144,9 +148,8 @@ Při přijetí notifikací `volumeUpdated`, `sourcesUpdated`, `nowPlayingUpdated
 
 ### Stavová LED
 
-- `red`: Bose je v `standby/off` stavu nebo není dostupný
-- `green`: Bose je zapnutý a dostupný
-- firmware předpokládá dvě samostatně řízené LED větve `red/green`
+- LED svítí, když je Bose zapnutý a dostupný
+- LED je zhasnutá, když je Bose ve `standby/off` stavu nebo není dostupný
 
 ### Displej
 
@@ -157,6 +160,12 @@ Normální obrazovka ukazuje:
 - aktivní zdroj
 - hlasitost a `mute`
 - krátký řádek `artist/track`
+
+Menu obrazovka ukazuje:
+
+- název menu nebo submenu
+- zvýrazněnou aktuální položku
+- stručnou nápovědu nebo stavovou hlášku na spodním řádku
 
 ## Chování při chybách
 
@@ -169,5 +178,5 @@ Normální obrazovka ukazuje:
 - směr enkodéru
 - konkrétní piny podle použité desky
 - orientace OLED
-- mechanické umístění tlačítek
+- mechanické umístění encoderu a jeho tlačítka
 - latence a případný krok hlasitosti

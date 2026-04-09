@@ -1,6 +1,6 @@
 # Bill of Materials
 
-Tento kusovník je připravený pro `v1` ovladač `Bose SoundTouch SA-5` s `ESP32`, `OLED`, rotačním enkodérem, dvěma tlačítky a dvoubarevnou stavovou LED.
+Tento kusovník je připravený pro aktuální ovladač `Bose SoundTouch SA-5` s `ESP32`, `OLED`, rotačním enkodérem s tlačítkem a jednou stavovou LED.
 
 ## Varianta A: rychlý prototyp na stole
 
@@ -10,10 +10,8 @@ Tento kusovník je připravený pro `v1` ovladač `Bose SoundTouch SA-5` s `ESP3
 | OLED displej | 1 | `SSD1306 0.96" 128x64 I2C` | 4 vodiče, jednoduché zapojení |
 | Rotační enkodér | 1 | LaskaKit `Rotační encoder s tlačítkem a RC s filtrem`, `LA132020` | Výchozí volba pro první prototyp |
 | Knoflík na enkodér | 1 | pro hřídel dle zvoleného enkodéru | Typicky `6 mm` |
-| Tlačítko `Source` | 1 | momentary `NO` pushbutton | Aktivní v `LOW` proti `GND` |
-| Tlačítko `Standby` | 1 | momentary `NO` pushbutton | Aktivní v `LOW` proti `GND` |
-| Stavová LED | 1 | dvoubarevná `red/green` LED nebo podsvícené tlačítko s dvěma LED větvemi | Výchozí firmware čeká `red` a `green` kanál zvlášť |
-| Rezistory pro LED | 2 | `220R` až `1k` | Jeden pro červenou a jeden pro zelenou větev |
+| Stavová LED | 1 | běžná jednobarevná LED | Svítí jen při stavu `on` |
+| Rezistor pro LED | 1 | `220R` až `1k` | Sériově k LED |
 | Breadboard | 1 | half-size nebo podobný | Na první oživení |
 | Jumper vodiče | 1 sada | `Dupont` / breadboard wires | Male-female nebo male-male podle desky |
 | USB kabel | 1 | podle desky, pro `LOLIN/Wemos S2 Mini` typicky `USB-C` | Napájení a flash |
@@ -27,9 +25,8 @@ Tento kusovník je připravený pro `v1` ovladač `Bose SoundTouch SA-5` s `ESP3
 | OLED displej | 1 | `SSD1306 0.96" 128x64 I2C` | V panelu vyříznout okno |
 | Rotační enkodér | 1 | `Bourns PEC11R` | Lepší mechanická jistota |
 | Knoflík na enkodér | 1 | panelový knob | Volit dle estetiky a hřídele |
-| Panelová tlačítka | 2 | momentary `NO`, ideálně panel mount `16 mm` | `Source`, `Standby` |
-| Stavová LED nebo iluminované tlačítko | 1 | `red/green` | Pro indikaci `standby/on` |
-| Rezistory pro LED | 2 | `220R` až `1k` | Sériově do LED větví |
+| Stavová LED | 1 | jednobarevná | Pro indikaci `on` |
+| Rezistor pro LED | 1 | `220R` až `1k` | Sériově k LED |
 | Prototypovací PCB | 1 | `Perma-Proto` nebo univerzální děrovaný spoj | Na trvalejší propojení |
 | Krabička | 1 | plastová `ABS` krabička | Pro panel a mechanickou ochranu |
 | Sloupky / distančníky | 4 | `M2.5` nebo `M3` | Dle otvorů displeje a desky |
@@ -62,15 +59,10 @@ Poznámka:
 - pro finálnější mechaniku: `Bourns PEC11R`
 - důvod: RC filtrovaný modul je vhodný pro rychlé oživení na `ESP32`, `Bourns` je mechanicky lepší pro hotové zařízení
 
-### Tlačítka
-
-- prototyp: obyčejná momentary `NO` tlačítka
-- finální panel: panel mount tlačítka, ideálně `16 mm`
-
 ### Stavová LED
 
-- doporučená varianta: dvoubarevná `red/green` LED
-- alternativa: podsvícené `standby` tlačítko se samostatným `red` a `green` vstupem
+- doporučená varianta: jednobarevná LED, typicky zelená
+- svítí jen při zapnutém a dostupném Bose
 
 ## Orientační rozdělení na povinné a volitelné položky
 
@@ -79,9 +71,9 @@ Poznámka:
 - `ESP32`
 - `OLED`
 - enkodér
-- 2 tlačítka
+- enkodér s tlačítkem
 - stavová LED
-- 2 LED rezistory
+- 1 LED rezistor
 - vodiče
 - napájení
 
@@ -101,10 +93,8 @@ Výchozí pinout firmware:
 - `GPIO35` -> `OLED SCL`
 - `GPIO7` -> `Encoder A`
 - `GPIO9` -> `Encoder B`
-- `GPIO5` -> `Source`
-- `GPIO11` -> `Standby`
-- `GPIO16` -> `LED Red`
-- `GPIO18` -> `LED Green`
+- `GPIO11` -> `Encoder SW`
+- `GPIO18` -> `Status LED`
 
 Detail zapojení je v [wiring.md](/Users/peny/Development/Projects/boser-remote-control/docs/wiring.md).
 

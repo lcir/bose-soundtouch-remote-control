@@ -1,6 +1,6 @@
 # Bill of Materials
 
-This bill of materials is prepared for the `v1` controller for the `Bose SoundTouch SA-5` using an `ESP32`, `OLED`, rotary encoder, two buttons, and a two-color status LED.
+This bill of materials is prepared for the current `Bose SoundTouch SA-5` controller using an `ESP32`, `OLED`, a rotary encoder with push switch, and a single status LED.
 
 ## Variant A: Quick Prototype On The Desk
 
@@ -10,10 +10,8 @@ This bill of materials is prepared for the `v1` controller for the `Bose SoundTo
 | OLED display | 1 | `SSD1306 0.96" 128x64 I2C` | 4 wires, simple wiring |
 | Rotary encoder | 1 | LaskaKit `Rotacni encoder s tlacitkem a RC s filtrem`, `LA132020` | Default choice for the first prototype |
 | Encoder knob | 1 | according to the selected encoder shaft | Typically `6 mm` |
-| `Source` button | 1 | momentary `NO` pushbutton | Active in `LOW` against `GND` |
-| `Standby` button | 1 | momentary `NO` pushbutton | Active in `LOW` against `GND` |
-| Status LED | 1 | two-color `red/green` LED or illuminated button with two LED branches | Default firmware expects separate `red` and `green` channels |
-| LED resistors | 2 | `220R` to `1k` | One for the red and one for the green branch |
+| Status LED | 1 | standard single-color LED | Lit only in the `on` state |
+| LED resistor | 1 | `220R` to `1k` | In series with the LED |
 | Breadboard | 1 | half-size or similar | For initial bring-up |
 | Jumper wires | 1 set | `Dupont` / breadboard wires | Male-female or male-male depending on the board |
 | USB cable | 1 | according to the board, typically `USB-C` for `LOLIN/Wemos S2 Mini` | Power and flashing |
@@ -27,9 +25,8 @@ This bill of materials is prepared for the `v1` controller for the `Bose SoundTo
 | OLED display | 1 | `SSD1306 0.96" 128x64 I2C` | Cut a panel window for it |
 | Rotary encoder | 1 | `Bourns PEC11R` | Better mechanical feel |
 | Encoder knob | 1 | panel knob | Choose to match style and shaft |
-| Panel buttons | 2 | momentary `NO`, ideally panel mount `16 mm` | `Source`, `Standby` |
-| Status LED or illuminated button | 1 | `red/green` | For `standby/on` indication |
-| LED resistors | 2 | `220R` to `1k` | In series with LED branches |
+| Status LED | 1 | single-color LED | For `on` indication |
+| LED resistor | 1 | `220R` to `1k` | In series with the LED |
 | Prototype PCB | 1 | `Perma-Proto` or generic perfboard | For more permanent internal wiring |
 | Enclosure | 1 | plastic `ABS` box | For panel mounting and protection |
 | Standoffs / spacers | 4 | `M2.5` or `M3` | According to display and board mounting holes |
@@ -62,15 +59,10 @@ Notes:
 - for a more finished build: `Bourns PEC11R`
 - reason: the RC-filtered module is convenient for fast `ESP32` bring-up, while `Bourns` is mechanically better for a finished device
 
-### Buttons
-
-- prototype: standard momentary `NO` buttons
-- final panel: panel mount buttons, ideally `16 mm`
-
 ### Status LED
 
-- recommended variant: two-color `red/green` LED
-- alternative: illuminated `standby` button with separate `red` and `green` inputs
+- recommended variant: a single-color LED, typically green
+- it is lit only when Bose is powered on and available
 
 ## Required Vs Optional Parts
 
@@ -79,9 +71,9 @@ Notes:
 - `ESP32`
 - `OLED`
 - encoder
-- 2 buttons
+- encoder with push switch
 - status LED
-- 2 LED resistors
+- 1 LED resistor
 - wires
 - power supply
 
@@ -101,10 +93,8 @@ Default firmware pinout:
 - `GPIO35` -> `OLED SCL`
 - `GPIO7` -> `Encoder A`
 - `GPIO9` -> `Encoder B`
-- `GPIO5` -> `Source`
-- `GPIO11` -> `Standby`
-- `GPIO16` -> `LED Red`
-- `GPIO18` -> `LED Green`
+- `GPIO11` -> `Encoder SW`
+- `GPIO18` -> `Status LED`
 
 Wiring details are in [wiring.md](/Users/peny/Development/Projects/boser-remote-control/docs/en/wiring.md).
 

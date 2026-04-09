@@ -1,8 +1,7 @@
 #include "InputController.h"
 
 void InputController::begin() {
-  initButton(_sourceButton, PIN_BUTTON_SOURCE);
-  initButton(_powerButton, PIN_BUTTON_POWER);
+  initButton(_encoderButton, PIN_ENCODER_BUTTON);
 
   ESP32Encoder::useInternalWeakPullResistors = puType::up;
   _encoder.attachHalfQuad(PIN_ENCODER_A, PIN_ENCODER_B);
@@ -11,14 +10,13 @@ void InputController::begin() {
 }
 
 void InputController::update() {
-  updateButton(_sourceButton);
-  updateButton(_powerButton);
+  updateButton(_encoderButton);
 }
 
 bool InputController::powerHeldDuringBoot(unsigned long durationMs) const {
   const unsigned long started = millis();
   while (millis() - started < durationMs) {
-    if (digitalRead(PIN_BUTTON_POWER) != LOW) {
+    if (digitalRead(PIN_ENCODER_BUTTON) != LOW) {
       return false;
     }
     delay(10);
@@ -26,12 +24,8 @@ bool InputController::powerHeldDuringBoot(unsigned long durationMs) const {
   return true;
 }
 
-bool InputController::consumeSourcePressed() {
-  return consumeButton(_sourceButton);
-}
-
-bool InputController::consumePowerPressed() {
-  return consumeButton(_powerButton);
+bool InputController::consumeEncoderPressed() {
+  return consumeButton(_encoderButton);
 }
 
 int InputController::readEncoderDelta() {

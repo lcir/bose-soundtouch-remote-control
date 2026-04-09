@@ -14,9 +14,8 @@ The project now defaults to `LOLIN/Wemos S2 Mini` for prototyping.
 - Bose SoundTouch local control over HTTP (`8090`) and WebSocket (`8080`)
 - Built-in LAN web UI for phone/browser control
 - Rotary encoder volume control with request coalescing
-- Single source-cycle button based on live `/sources`
-- Dedicated standby button for turning SoundTouch off
-- Bi-color power LED: `red = standby/off`, `green = on`
+- Encoder push-button driven OLED menu for `Volume`, `Source`, and `Power`
+- Single status LED: `on = Bose powered on`, `off = standby/unavailable`
 - `128x64` OLED status UI (`SSD1306` over `I2C`)
 
 ## Default wiring
@@ -28,10 +27,8 @@ Change these in `include/PinConfig.h` if your hardware differs.
 - `GPIO35` `SCL`
 - `GPIO7` encoder `A`
 - `GPIO9` encoder `B`
-- `GPIO5` source cycle button
-- `GPIO11` standby button / setup hold button
-- `GPIO16` power LED `red`
-- `GPIO18` power LED `green`
+- `GPIO11` encoder switch / setup hold button
+- `GPIO18` status LED
 
 Buttons are assumed `active low` with `INPUT_PULLUP`.
 
@@ -43,7 +40,16 @@ Buttons are assumed `active low` with `INPUT_PULLUP`.
 4. Enter home Wi-Fi credentials and Bose `hostname` or `IP`.
 5. Device reboots into normal station mode.
 
-Holding the standby button during boot for roughly `1.5 s` forces setup mode again.
+Holding the encoder button during boot for roughly `1.5 s` forces setup mode again.
+
+## Encoder Control
+
+- rotate in idle mode: change volume
+- short press: open the OLED menu
+- rotate in the menu: choose `Volume`, `Source`, or `Power`
+- short press on `Source` or `Power`: open a submenu
+- confirm a submenu choice with another short press
+- after confirmation, the menu closes and the controller returns to idle volume mode
 
 ## LAN Web UI
 

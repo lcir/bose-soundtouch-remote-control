@@ -11,8 +11,7 @@ class InputController {
   void update();
 
   bool powerHeldDuringBoot(unsigned long durationMs) const;
-  bool consumeSourcePressed();
-  bool consumePowerPressed();
+  bool consumeEncoderPressed();
   int readEncoderDelta();
 
  private:
@@ -28,8 +27,7 @@ class InputController {
   void updateButton(ButtonState& button);
   bool consumeButton(ButtonState& button);
 
-  ButtonState _sourceButton;
-  ButtonState _powerButton;
+  ButtonState _encoderButton;
   ESP32Encoder _encoder;
   int64_t _lastEncoderCount = 0;
 };
