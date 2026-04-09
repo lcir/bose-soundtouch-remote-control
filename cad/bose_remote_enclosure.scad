@@ -3,18 +3,18 @@ $fn = 48;
 part = "assembly"; // body, rear_lid, panel_layout, assembly
 show_reference_hardware = true;
 
-// Main envelope
-outer_width = 132;
-outer_depth = 84;
-outer_height = 58;
-corner_radius = 7;
+// Main envelope sized for OLED + encoder + status LED only.
+outer_width = 92;
+outer_depth = 76;
+outer_height = 54;
+corner_radius = 6.5;
 wall = 2.4;
 floor_thickness = 2.8;
 front_panel_thickness = 3.0;
 rear_lid_thickness = 3.0;
 
-// Front panel layout: integrated into the body.
-oled_center = [outer_width / 2, 43.0];
+// Front panel layout: vertically centered stack.
+oled_center = [outer_width / 2, 39.0];
 oled_window = [24, 13];
 oled_board = [27.4, 27.8];
 oled_hole_spacing = [23.2, 23.2];
@@ -22,17 +22,15 @@ oled_mount_hole_d = 2.2;
 oled_standoff_d = 5.8;
 oled_backoff_from_panel = 5.2;
 
-encoder_center = [outer_width / 2, 28.0];
+encoder_center = [outer_width / 2, 22.0];
 encoder_panel_hole_d = 7.4;
 encoder_relief_d = 15;
 encoder_relief_depth = 1.2;
 
-button_row_z = 11.5;
-button_spacing = 52;
-button_hole_d = 7.2;
-button_relief_d = 12;
-button_relief_depth = 1.0;
-led_hole_d = 3.2;
+led_center = [outer_width / 2, 8.5];
+led_hole_d = 2.2;
+led_relief_d = 6.8;
+led_relief_depth = 1.6;
 
 // Rear lid and USB cable routing
 rear_frame_depth = 8.0;
@@ -42,12 +40,12 @@ rear_screw_hole_d = 3.2;
 rear_screw_head_d = 6.4;
 rear_screw_head_depth = 1.8;
 rear_screw_x = 6.4;
-rear_screw_z = [14, 44];
+rear_screw_z = [12, 42];
 usb_opening = [13.0, 8.0];
 usb_cable_slot_w = 8.0;
-usb_slot_center_z = 9.0;
+usb_slot_center_z = 8.8;
 rear_vent = [7.0, 12.0];
-rear_vent_x_offset = 30;
+rear_vent_x_offset = 20;
 
 // S2 Mini tray
 s2_board = [25.6, 34.6, 1.6]; // x, y, z; USB at rear on +Y edge
@@ -60,8 +58,8 @@ s2_entry_clearance = 0.6;
 // Cable routing fences
 cable_fence_thickness = 1.8;
 cable_fence_height = 11;
-cable_lane_x = 15;
-cable_lane_w = 12;
+cable_lane_x = 11;
+cable_lane_w = 10;
 
 module rounded_rect_2d(size, radius) {
   x = size[0];
@@ -105,12 +103,7 @@ module front_panel_cutouts_2d() {
   translate([encoder_center[0], encoder_center[1]])
     circle(d = encoder_panel_hole_d);
 
-  for (x_pos = [outer_width / 2 - button_spacing / 2, outer_width / 2 + button_spacing / 2]) {
-    translate([x_pos, button_row_z])
-      circle(d = button_hole_d);
-  }
-
-  translate([outer_width / 2, button_row_z])
+  translate([led_center[0], led_center[1]])
     circle(d = led_hole_d);
 }
 
@@ -144,11 +137,9 @@ module front_panel_reliefs() {
     rotate([-90, 0, 0])
       cylinder(h = encoder_relief_depth + 0.1, d = encoder_relief_d);
 
-  for (x_pos = [outer_width / 2 - button_spacing / 2, outer_width / 2 + button_spacing / 2]) {
-    translate([x_pos, front_panel_thickness - button_relief_depth, button_row_z])
-      rotate([-90, 0, 0])
-        cylinder(h = button_relief_depth + 0.1, d = button_relief_d);
-  }
+  translate([led_center[0], front_panel_thickness - led_relief_depth, led_center[1]])
+    rotate([-90, 0, 0])
+      cylinder(h = led_relief_depth + 0.1, d = led_relief_d);
 }
 
 module rear_frame_side_rails() {
@@ -313,6 +304,11 @@ module reference_hardware() {
     translate([encoder_center[0], front_panel_thickness, encoder_center[1]])
       rotate([-90, 0, 0])
         cylinder(h = 18, d = 17);
+
+  color([0.95, 0.2, 0.2, 0.45])
+    translate([led_center[0], front_panel_thickness, led_center[1]])
+      rotate([-90, 0, 0])
+        cylinder(h = 4, d = 4.8);
 }
 
 module assembly() {

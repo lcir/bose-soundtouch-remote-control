@@ -1,5 +1,93 @@
 #include "UiRenderer.h"
 
+namespace {
+constexpr int kStatusTopY = 10;
+constexpr int kMenuTopY = 14;
+constexpr int kMenuHeight = 50;
+constexpr int kCardWidth = 92;
+constexpr int kCardHeight = 34;
+constexpr int kCardRadius = 6;
+constexpr int kCenterX = 64;
+constexpr int kCardCenterY = kMenuTopY + (kMenuHeight / 2);
+constexpr int kCardTextY = kCardCenterY + 5;
+constexpr int kSidePeekOffset = 74;
+constexpr int kNeighborOffset = 96;
+
+int wrapMenuIndex(int index, int count) {
+  if (count <= 0) {
+    return 0;
+  }
+  return (index % count + count) % count;
+}
+
+void drawCard(U8G2_SSD1306_128X64_NONAME_F_HW_I2C& display,
+              int centerX,
+              const String& label,
+              bool selected,
+              bool enabled) {
+  const int left = centerX - (kCardWidth / 2);
+  const int top = kCardCenterY - (kCardHeight / 2);
+
+  if (selected && enabled) {
+    display.setDrawColor(1);
+    display.drawRBox(left, top, kCardWidth, kCardHeight, kCardRadius);
+    display.setDrawColor(0);
+  } else {
+    display.setDrawColor(1);
+    display.drawRFrame(left, top, kCardWidth, kCardHeight, kCardRadius);
+    if (!enabled) {
+      display.drawLine(left + 8, top + 8, left + 18, top + 18);
+      display.drawLine(left + 18, top + 8, left + 8, top + 18);
+    }
+  }
+
+  display.setFont(selected ? u8g2_font_10x20_tf : u8g2_font_7x14B_tf);
+  const String fitted = selected ? label : label.substring(0, min(static_cast<unsigned int>(label.length()), 4U));
+  const uint16_t width = display.getUTF8Width(fitted.c_str());
+  display.drawUTF8(centerX - (width / 2), selected ? kCardTextY : kCardCenterY + 4, fitted.c_str());
+  display.setDrawColor(1);
+}
+
+void drawCarouselCards(U8G2_SSD1306_128X64_NONAME_F_HW_I2C& display, const UiMenuModel& menu) {
+  const int totalItems = static_cast<int>(menu.items.size());
+  if (totalItems <= 0) {
+    return;
+  }
+
+  int currentIndex = wrapMenuIndex(menu.selectedIndex, totalItems);
+  int previousIndex = wrapMenuIndex(menu.previousSelectedIndex, totalItems);
+  int slideOffset = 0;
+  if (menu.transitionActive) {
+    slideOffset = (menu.transitionDirection * kNeighborOffset * (255 - menu.transitionProgress)) / 255;
+  }
+
+  const int currentCenterX = kCenterX + slideOffset;
+  const int previousCenterX = kCenterX + slideOffset - (menu.transitionDirection * kNeighborOffset);
+
+  if (menu.transitionActive && previousIndex != currentIndex) {
+    drawCard(display,
+             previousCenterX,
+             menu.items[previousIndex].label,
+             false,
+             menu.items[previousIndex].enabled);
+  }
+
+  const int leftNeighborIndex = wrapMenuIndex(currentIndex - 1, totalItems);
+  const int rightNeighborIndex = wrapMenuIndex(currentIndex + 1, totalItems);
+  drawCard(display,
+           currentCenterX - kSidePeekOffset,
+           menu.items[leftNeighborIndex].label,
+           false,
+           menu.items[leftNeighborIndex].enabled);
+  drawCard(display,
+           currentCenterX + kSidePeekOffset,
+           menu.items[rightNeighborIndex].label,
+           false,
+           menu.items[rightNeighborIndex].enabled);
+  drawCard(display, currentCenterX, menu.items[currentIndex].label, true, menu.items[currentIndex].enabled);
+}
+}  // namespace
+
 void UiRenderer::begin(bool flip) {
   Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
   Wire.setClock(DISPLAY_I2C_CLOCK_HZ);
@@ -69,57 +157,18 @@ void UiRenderer::renderMenu(const BoseState& state,
   _display.clearBuffer();
 
   _display.setFont(u8g2_font_6x12_tf);
-  _display.drawStr(0, 10, wifiConnected ? "WiFi:OK" : "WiFi:DOWN");
-  _display.drawStr(64, 10, state.wsConnected ? "WS:OK" : "WS:POLL");
+  _display.drawStr(0, kStatusTopY, wifiConnected ? "WiFi:OK" : "WiFi:DOWN");
+  _display.drawStr(64, kStatusTopY, state.wsConnected ? "WS:OK" : "WS:POLL");
+  _display.drawHLine(0, kMenuTopY - 1, 128);
 
-  _display.setFont(u8g2_font_7x14B_tf);
-  _display.drawUTF8(0, 24, fitToWidth(menu.title, 126).c_str());
-
-  const int totalItems = static_cast<int>(menu.items.size());
-  const int visibleItems = 3;
-  int selectedIndex = menu.selectedIndex;
-  if (selectedIndex < 0) {
-    selectedIndex = 0;
-  }
-  if (selectedIndex >= totalItems && totalItems > 0) {
-    selectedIndex = totalItems - 1;
+  if (menu.items.empty()) {
+    _display.setFont(u8g2_font_6x12_tf);
+    _display.drawUTF8(0, 42, fitToWidth(statusHint, 126).c_str());
+    _display.sendBuffer();
+    return;
   }
 
-  int startIndex = 0;
-  if (selectedIndex >= visibleItems) {
-    startIndex = selectedIndex - visibleItems + 1;
-  }
-  if (startIndex + visibleItems > totalItems) {
-    startIndex = max(0, totalItems - visibleItems);
-  }
-
-  _display.setFont(u8g2_font_6x12_tf);
-  for (int row = 0; row < visibleItems && startIndex + row < totalItems; ++row) {
-    const int itemIndex = startIndex + row;
-    const int y = 38 + row * 10;
-    const bool selected = itemIndex == selectedIndex;
-    String line = menu.items[itemIndex].label;
-    if (!menu.items[itemIndex].enabled) {
-      line += " *";
-    }
-
-    if (selected) {
-      _display.setDrawColor(1);
-      _display.drawBox(0, y - 9, 128, 10);
-      _display.setDrawColor(0);
-      _display.drawUTF8(2, y, fitToWidth(line, 124).c_str());
-      _display.setDrawColor(1);
-    } else {
-      _display.drawUTF8(2, y, fitToWidth(line, 124).c_str());
-    }
-  }
-
-  String footer = menu.detail;
-  if (footer.isEmpty()) {
-    footer = statusHint;
-  }
-  _display.setFont(u8g2_font_5x8_tf);
-  _display.drawUTF8(0, 64, fitToWidth(footer, 126).c_str());
+  drawCarouselCards(_display, menu);
   _display.sendBuffer();
 }
 

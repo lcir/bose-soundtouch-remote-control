@@ -50,5 +50,9 @@ struct UiMenuModel {
   String title;
   std::vector<UiMenuItem> items;
   int selectedIndex = 0;
+  int previousSelectedIndex = 0;
+  bool transitionActive = false;
+  int8_t transitionDirection = 0;
+  uint8_t transitionProgress = 255;
   String detail;
 };

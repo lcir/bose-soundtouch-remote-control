@@ -1,4 +1,10 @@
+#include <stdlib.h>
+
 #include "InputController.h"
+
+namespace {
+constexpr int kEncoderCountsPerStep = 2;
+}
 
 void InputController::begin() {
   initButton(_encoderButton, PIN_ENCODER_BUTTON);
@@ -32,7 +38,15 @@ int InputController::readEncoderDelta() {
   const int64_t current = _encoder.getCount();
   const int delta = static_cast<int>(current - _lastEncoderCount);
   _lastEncoderCount = current;
-  return delta;
+
+  _pendingEncoderCounts += delta;
+  if (abs(_pendingEncoderCounts) < kEncoderCountsPerStep) {
+    return 0;
+  }
+
+  const int steps = _pendingEncoderCounts / kEncoderCountsPerStep;
+  _pendingEncoderCounts %= kEncoderCountsPerStep;
+  return steps;
 }
 
 void InputController::initButton(ButtonState& button, int pin) {

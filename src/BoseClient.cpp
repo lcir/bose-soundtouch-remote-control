@@ -313,6 +313,24 @@ bool BoseClient::enterBluetoothPairing() {
   return true;
 }
 
+bool BoseClient::canSelectSource(const String& sourceId) const {
+  const int sourceIndex = findSourceIndexForSelectionId(sourceId);
+  if (sourceIndex < 0) {
+    return false;
+  }
+
+  const BoseSource& source = _sources[sourceIndex];
+  if (source.ready) {
+    return true;
+  }
+
+  if (source.transportSource.equalsIgnoreCase(kSelectionBluetooth)) {
+    return true;
+  }
+
+  return source.selectable;
+}
+
 String BoseClient::currentSelectionId() const {
   if (!_state.poweredOn || _state.currentSourceId.isEmpty()) {
     return "";

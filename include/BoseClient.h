@@ -23,6 +23,7 @@ class BoseClient {
   bool wake();
   bool standby();
   bool sendKey(const String& keyName);
+  bool canSelectSource(const String& sourceId) const;
   String currentSelectionId() const;
   String selectionIdForSource(const BoseSource& source) const;
   String selectionLabelForSource(const BoseSource& source) const;

@@ -17,6 +17,7 @@ constexpr unsigned long kVolumeCommitDelayMs = 100;
 constexpr unsigned long kSourceOverlayMs = 2000;
 constexpr unsigned long kActionOverlayMs = 500;
 constexpr unsigned long kMenuTimeoutMs = 4000;
+constexpr unsigned long kMenuAnimationMs = 140;
 
 constexpr const char* kSelectionOnline = "ONLINE";
 constexpr const char* kSelectionBluetooth = "BLUETOOTH";
@@ -206,16 +207,16 @@ class BoseRemoteApp {
         adjustPendingVolume(delta, true);
         break;
       case MenuMode::Main:
-        _mainMenuIndex = wrapIndex(_mainMenuIndex, delta, 3);
+        updateMenuSelection(_mainMenuIndex, delta, 3);
         break;
       case MenuMode::VolumeEdit:
         adjustPendingVolume(delta, false);
         break;
       case MenuMode::SourceSelect:
-        _sourceMenuIndex = moveEnabledIndex(_sourceMenuIndex, delta, sourceMenuItems());
+        updateMenuSelection(_sourceMenuIndex, delta, static_cast<int>(sourceMenuItems().size()));
         break;
       case MenuMode::PowerSelect:
-        _powerMenuIndex = moveEnabledIndex(_powerMenuIndex, delta, powerMenuItems());
+        updateMenuSelection(_powerMenuIndex, delta, static_cast<int>(powerMenuItems().size()));
         break;
     }
   }
@@ -287,6 +288,7 @@ class BoseRemoteApp {
   }
 
   void openMainMenu() {
+    resetMenuAnimation();
     _mainMenuIndex = 0;
     _menuMode = MenuMode::Main;
     noteMenuInteraction();
@@ -296,20 +298,21 @@ class BoseRemoteApp {
     if (_targetVolume < 0) {
       _targetVolume = _bose.state().volume;
     }
+    resetMenuAnimation();
     _menuMode = MenuMode::VolumeEdit;
     noteMenuInteraction();
   }
 
   void enterSourceMenu() {
+    resetMenuAnimation();
     _sourceMenuIndex = currentSourceMenuIndex();
-    _sourceMenuIndex = moveEnabledIndex(_sourceMenuIndex, 0, sourceMenuItems());
     _menuMode = MenuMode::SourceSelect;
     noteMenuInteraction();
   }
 
   void enterPowerMenu() {
+    resetMenuAnimation();
     _powerMenuIndex = _bose.state().poweredOn ? 1 : 0;
-    _powerMenuIndex = moveEnabledIndex(_powerMenuIndex, 0, powerMenuItems());
     _menuMode = MenuMode::PowerSelect;
     noteMenuInteraction();
   }
@@ -320,6 +323,7 @@ class BoseRemoteApp {
     _sourceMenuIndex = 0;
     _powerMenuIndex = 0;
     _lastMenuInteractionMs = 0;
+    resetMenuAnimation();
   }
 
   void applySelectedSource() {
@@ -397,17 +401,7 @@ class BoseRemoteApp {
   }
 
   bool isSourceSelectionAvailable(const String& selectionId) const {
-    if (!_bose.state().poweredOn) {
-      return false;
-    }
-
-    const auto& sources = _bose.sources();
-    for (const auto& source : sources) {
-      if (_bose.selectionIdForSource(source).equalsIgnoreCase(selectionId) && source.selectable) {
-        return true;
-      }
-    }
-    return false;
+    return _bose.canSelectSource(selectionId);
   }
 
   int wrapIndex(int current, int delta, int count) const {
@@ -423,42 +417,39 @@ class BoseRemoteApp {
     return index;
   }
 
-  int moveEnabledIndex(int current, int delta, const std::vector<UiMenuItem>& items) const {
-    if (items.empty()) {
-      return 0;
+  void updateMenuSelection(int& currentIndex, int delta, int count) {
+    if (count <= 0 || delta == 0) {
+      return;
     }
 
-    int firstEnabled = -1;
-    for (size_t i = 0; i < items.size(); ++i) {
-      if (items[i].enabled) {
-        firstEnabled = static_cast<int>(i);
-        break;
-      }
-    }
-    if (firstEnabled < 0) {
-      return 0;
+    const int previousIndex = wrapIndex(currentIndex, 0, count);
+    const int nextIndex = wrapIndex(currentIndex, delta, count);
+    if (nextIndex == currentIndex) {
+      return;
     }
 
-    if (current < 0 || current >= static_cast<int>(items.size())) {
-      current = firstEnabled;
+    _menuPreviousIndex = previousIndex;
+    _menuAnimationDirection = delta > 0 ? 1 : -1;
+    _menuAnimationActive = true;
+    _menuAnimationStartMs = millis();
+    currentIndex = nextIndex;
+  }
+
+  void updateMenuAnimation() {
+    if (!_menuAnimationActive) {
+      return;
     }
 
-    if (delta == 0) {
-      return items[current].enabled ? current : firstEnabled;
+    if (millis() - _menuAnimationStartMs >= kMenuAnimationMs) {
+      resetMenuAnimation();
     }
+  }
 
-    int index = current;
-    const int count = static_cast<int>(items.size());
-    const int direction = delta > 0 ? 1 : -1;
-    for (int step = 0; step < abs(delta); ++step) {
-      for (int attempt = 0; attempt < count; ++attempt) {
-        index = (index + direction + count) % count;
-        if (items[index].enabled) {
-          break;
-        }
-      }
-    }
-    return index;
+  void resetMenuAnimation() {
+    _menuAnimationActive = false;
+    _menuAnimationStartMs = 0;
+    _menuAnimationDirection = 0;
+    _menuPreviousIndex = 0;
   }
 
   UiMenuModel currentMenuModel(const String& statusHint) const {
@@ -472,31 +463,35 @@ class BoseRemoteApp {
         menu.items.push_back(makeMenuItem("Source", true));
         menu.items.push_back(makeMenuItem("Power", true));
         menu.selectedIndex = _mainMenuIndex;
-        menu.detail = "Press to open";
         break;
       case MenuMode::VolumeEdit:
-        menu.title = "Volume";
         menu.items.clear();
-        menu.items.push_back(makeMenuItem(String("Value: ") + String(displayVolume()), true));
+        menu.items.push_back(makeMenuItem(String(displayVolume()), true));
         menu.selectedIndex = 0;
-        menu.detail = "Turn / press confirm";
         break;
       case MenuMode::SourceSelect:
-        menu.title = "Source";
         menu.items = sourceMenuItems();
         menu.selectedIndex = _sourceMenuIndex;
-        menu.detail = _bose.state().poweredOn ? "Select source" : "Power on first";
         break;
       case MenuMode::PowerSelect:
-        menu.title = "Power";
         menu.items = powerMenuItems();
         menu.selectedIndex = _powerMenuIndex;
-        menu.detail = "Select power state";
         break;
       case MenuMode::Idle:
         menu.title = "";
         menu.detail = statusHint;
         break;
+    }
+
+    menu.previousSelectedIndex = _menuAnimationActive ? _menuPreviousIndex : menu.selectedIndex;
+    menu.transitionActive = _menuAnimationActive;
+    menu.transitionDirection = _menuAnimationDirection;
+    if (_menuAnimationActive) {
+      const unsigned long elapsed = millis() - _menuAnimationStartMs;
+      const unsigned long clamped = min(elapsed, kMenuAnimationMs);
+      menu.transitionProgress = static_cast<uint8_t>((clamped * 255U) / kMenuAnimationMs);
+    } else {
+      menu.transitionProgress = 255;
     }
 
     return menu;
@@ -538,6 +533,7 @@ class BoseRemoteApp {
     }
 
     if (_menuMode != MenuMode::Idle) {
+      updateMenuAnimation();
       _ui.renderMenu(view, wifiConnected, currentMenuModel(statusHint), statusHint);
       return;
     }
@@ -579,6 +575,10 @@ class BoseRemoteApp {
   int _sourceMenuIndex = 0;
   int _powerMenuIndex = 0;
   unsigned long _lastMenuInteractionMs = 0;
+  bool _menuAnimationActive = false;
+  int _menuPreviousIndex = 0;
+  int8_t _menuAnimationDirection = 0;
+  unsigned long _menuAnimationStartMs = 0;
 };
 
 constexpr BoseRemoteApp::SourceMenuOption BoseRemoteApp::kSourceMenuOptions[5];

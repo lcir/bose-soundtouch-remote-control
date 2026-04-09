@@ -30,4 +30,5 @@ class InputController {
   ButtonState _encoderButton;
   ESP32Encoder _encoder;
   int64_t _lastEncoderCount = 0;
+  int _pendingEncoderCounts = 0;
 };
