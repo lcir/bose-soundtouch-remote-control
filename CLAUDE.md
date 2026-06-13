@@ -25,7 +25,8 @@ The firmware is a single `BoseRemoteApp` class (`src/main.cpp`) that orchestrate
 
 - **`BoseClient`** — All Bose HTTP/WebSocket communication. XML parsing is hand-rolled (no library). WebSocket events schedule HTTP refreshes rather than parsing WS payload directly. Falls back to 5-second polling when WebSocket is down.
 - **`CaptivePortal`** — First-boot AP mode (`BoseRemote-xxxx`), DNS redirect, and web form for Wi-Fi + Bose host configuration.
-- **`ControlWebServer`** — LAN web UI on port 80 with REST API (`/api/state`, `/api/power`, `/api/source/next`, `/api/source/select`, `/api/standby`, `/api/volume`). The HTML/CSS/JS page is built as inline strings.
+- **`ControlWebServer`** — LAN web UI on port 80 with REST API (`/api/state`, `/api/power`, `/api/source/next`, `/api/source/select`, `/api/standby`, `/api/volume`, plus OTA: `/api/ota`, `/api/ota/check`, `/api/ota/apply`). The HTML/CSS/JS page is built as inline strings.
+- **`OtaUpdater`** — Pull-based firmware self-update from GitHub Releases. Queries the GitHub API for the latest release, compares its tag against the build-time `FIRMWARE_VERSION`, and downloads/flashes the per-board `firmware-<env>.bin` asset via the ESP32 OTA mechanism. The only feature that talks to the public internet, and only on explicit request.
 - **`InputController`** — Rotary encoder (half-quad, internal pull-ups), 25ms button debounce, power-held-at-boot detection for forced setup mode.
 - **`UiRenderer`** — SSD1306 128x64 OLED over I2C via U8g2.
 - **`ConfigStore`** — Persists `DeviceConfig` to ESP32 NVS via Arduino `Preferences` (namespace `bose-remote`).
@@ -34,6 +35,7 @@ Shared data structures (`DeviceConfig`, `BoseSource`, `BoseState`) are in `inclu
 
 ## Key Behaviors
 
+- **OTA self-update**: dual-app `default.csv` partition layout (`board_build.partitions`) provides two ~1.25 MB OTA slots. `FIRMWARE_VERSION` is injected from `git describe` by `scripts/version.py`. The blocking download/flash runs in the main loop (not the HTTP handler) so the `/api/ota/apply` response is sent before the reboot. Pushing a `vX.Y.Z` tag publishes per-board `.bin` assets to a GitHub Release via `.github/workflows/build.yml`.
 - **Volume coalescing**: encoder deltas accumulate and the HTTP call fires after 100ms idle.
 - **OLED rate-limited** to 80ms render interval.
 - **Source grouping**: multiple AUX inputs → individual entries; all non-local/non-BT online sources → single `ONLINE` selection; QPlay sources are hidden.

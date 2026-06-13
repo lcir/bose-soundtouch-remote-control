@@ -185,6 +185,37 @@ void UiRenderer::renderSetup(const String& apName, const String& apIp, const Str
   _display.sendBuffer();
 }
 
+void UiRenderer::renderUpdate(const String& title, int percent, const String& detail) {
+  const int clamped = percent < 0 ? 0 : (percent > 100 ? 100 : percent);
+
+  _display.clearBuffer();
+  _display.setFont(u8g2_font_7x14B_tf);
+  _display.drawUTF8(0, 14, fitToWidth(title, 126).c_str());
+
+  // Progress bar.
+  const int barX = 2;
+  const int barY = 26;
+  const int barW = 124;
+  const int barH = 14;
+  _display.drawRFrame(barX, barY, barW, barH, 3);
+  const int fill = ((barW - 4) * clamped) / 100;
+  if (fill > 0) {
+    _display.drawBox(barX + 2, barY + 2, fill, barH - 4);
+  }
+
+  _display.setFont(u8g2_font_6x12_tf);
+  String pct = String(clamped);
+  pct += "%";
+  _display.drawUTF8(0, 54, pct.c_str());
+
+  if (!detail.isEmpty()) {
+    _display.drawUTF8(0, 64, fitToWidth(detail, 126).c_str());
+  } else {
+    _display.drawUTF8(0, 64, "Do not power off");
+  }
+  _display.sendBuffer();
+}
+
 String UiRenderer::fitToWidth(const String& text, uint16_t width) {
   String trimmed = text;
   trimmed.trim();

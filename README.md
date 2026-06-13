@@ -17,6 +17,7 @@ The project now defaults to `LOLIN/Wemos S2 Mini` for prototyping.
 - Encoder push-button driven OLED menu for `Volume`, `Source`, and `Power`
 - Single status LED: `on = Bose powered on`, `off = standby/unavailable`
 - `128x64` OLED status UI (`SSD1306` over `I2C`)
+- Over-the-air (OTA) self-update from GitHub Releases via the web UI
 
 ## Default wiring
 
@@ -61,6 +62,43 @@ Open `http://<esp32-ip>/` in a browser on the same network to:
 - directly select the grouped sources exposed by the web UI
 - send dynamic `Wake` / `Standby`
 - view current Bose state
+- check for and apply firmware updates (see below)
+
+## Firmware updates (OTA)
+
+The controller can update its own firmware over the air, pulling the build from
+this repo's GitHub Releases — no USB cable needed after the first flash.
+
+How it works:
+
+1. Pushing a `vX.Y.Z` tag triggers the `Build Firmware` workflow, which compiles
+   each board and publishes `firmware-<env>.bin` as assets on a GitHub Release.
+2. The running firmware embeds its own version (`FIRMWARE_VERSION`, derived from
+   the git tag at build time via `scripts/version.py`).
+3. In the LAN web UI, the **Firmware** section calls the GitHub API for the
+   latest release, compares the tag against the installed version, and offers
+   **Update now** when a newer release exists.
+4. The device downloads the asset matching its board (`firmware-<env>.bin`),
+   flashes it to the inactive OTA slot, and reboots into the new image.
+
+REST endpoints backing this: `GET /api/ota` (status), `POST /api/ota/check`,
+`POST /api/ota/apply`.
+
+Cutting a release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Notes:
+
+- The 4 MB modules use the dual-app `default.csv` partition layout
+  (`board_build.partitions`), giving two ~1.25 MB OTA slots. A failed download
+  leaves the running image untouched.
+- TLS to GitHub uses `setInsecure()` (no certificate pinning) to keep the image
+  small; traffic still goes only to `api.github.com` / GitHub's asset CDN and
+  only when an update is explicitly requested.
 
 ## Build
 
