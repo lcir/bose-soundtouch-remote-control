@@ -216,6 +216,50 @@ void UiRenderer::renderUpdate(const String& title, int percent, const String& de
   _display.sendBuffer();
 }
 
+void UiRenderer::renderBusy(const String& title, const String& detail) {
+  _display.clearBuffer();
+  _display.setFont(u8g2_font_7x14B_tf);
+  _display.drawUTF8(0, 30, fitToWidth(title, 126).c_str());
+  _display.setFont(u8g2_font_6x12_tf);
+  _display.drawUTF8(0, 50, fitToWidth(detail, 126).c_str());
+  _display.sendBuffer();
+}
+
+void UiRenderer::renderUpdatePrompt(const String& latestVersion, bool installSelected) {
+  _display.clearBuffer();
+  _display.setFont(u8g2_font_6x12_tf);
+  _display.drawUTF8(0, 11, "Firmware update");
+
+  _display.setFont(u8g2_font_7x14B_tf);
+  const String version = latestVersion.isEmpty() ? "available" : latestVersion;
+  _display.drawUTF8(0, 30, fitToWidth(version, 126).c_str());
+
+  // Two buttons: Install (left) / Cancel (right), selected one is filled.
+  const int y = 40;
+  const int h = 18;
+  const int w = 60;
+  const char* labels[2] = {"Install", "Cancel"};
+  const bool selected[2] = {installSelected, !installSelected};
+  for (int i = 0; i < 2; ++i) {
+    const int x = (i == 0) ? 2 : 66;
+    if (selected[i]) {
+      _display.setDrawColor(1);
+      _display.drawRBox(x, y, w, h, 4);
+      _display.setDrawColor(0);
+    } else {
+      _display.setDrawColor(1);
+      _display.drawRFrame(x, y, w, h, 4);
+    }
+    const uint16_t tw = _display.getUTF8Width(labels[i]);
+    _display.drawUTF8(x + (w - tw) / 2, y + 13, labels[i]);
+    _display.setDrawColor(1);
+  }
+
+  _display.setFont(u8g2_font_5x8_tf);
+  _display.drawUTF8(0, 64, "Turn to choose, press to confirm");
+  _display.sendBuffer();
+}
+
 String UiRenderer::fitToWidth(const String& text, uint16_t width) {
   String trimmed = text;
   trimmed.trim();

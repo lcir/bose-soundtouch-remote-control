@@ -547,7 +547,7 @@ int BoseClient::findPreferredWakeSourceIndex() const {
     }
   }
 
-  const String preferredIds[] = {"AUX", "AUX2", "AUX3", kSelectionOnline, kSelectionBluetooth};
+  const String preferredIds[] = {"AUX1", "AUX2", "AUX3", kSelectionOnline, kSelectionBluetooth};
   for (const String& preferredId : preferredIds) {
     const int preferredIndex = findSourceIndexForSelectionId(preferredId, false);
     if (preferredIndex >= 0) {

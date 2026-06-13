@@ -19,6 +19,8 @@ class UiRenderer {
                   const String& statusHint);
   void renderSetup(const String& apName, const String& apIp, const String& message);
   void renderUpdate(const String& title, int percent, const String& detail);
+  void renderUpdatePrompt(const String& latestVersion, bool installSelected);
+  void renderBusy(const String& title, const String& detail);
 
  private:
   String fitToWidth(const String& text, uint16_t width);

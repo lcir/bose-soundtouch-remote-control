@@ -31,7 +31,7 @@ constexpr unsigned long kMenuAnimationMs = 140;
 
 constexpr const char* kSelectionOnline = "ONLINE";
 constexpr const char* kSelectionBluetooth = "BLUETOOTH";
-constexpr const char* kSelectionAux1 = "AUX";
+constexpr const char* kSelectionAux1 = "AUX1";
 constexpr const char* kSelectionAux2 = "AUX2";
 constexpr const char* kSelectionAux3 = "AUX3";
 
@@ -90,6 +90,7 @@ class BoseRemoteApp {
     VolumeEdit,
     SourceSelect,
     PowerSelect,
+    UpdateConfirm,
   };
 
   struct SourceMenuOption {
@@ -259,7 +260,7 @@ class BoseRemoteApp {
         adjustPendingVolume(delta, true);
         break;
       case MenuMode::Main:
-        updateMenuSelection(_mainMenuIndex, delta, 3);
+        updateMenuSelection(_mainMenuIndex, delta, 4);
         break;
       case MenuMode::VolumeEdit:
         adjustPendingVolume(delta, false);
@@ -269,6 +270,11 @@ class BoseRemoteApp {
         break;
       case MenuMode::PowerSelect:
         updateMenuSelection(_powerMenuIndex, delta, static_cast<int>(powerMenuItems().size()));
+        break;
+      case MenuMode::UpdateConfirm:
+        if (delta != 0) {
+          _updateInstallSelected = !_updateInstallSelected;
+        }
         break;
     }
   }
@@ -285,8 +291,10 @@ class BoseRemoteApp {
           enterVolumeMenu();
         } else if (_mainMenuIndex == 1) {
           enterSourceMenu();
-        } else {
+        } else if (_mainMenuIndex == 2) {
           enterPowerMenu();
+        } else {
+          enterUpdateFlow();
         }
         break;
       case MenuMode::VolumeEdit:
@@ -299,6 +307,14 @@ class BoseRemoteApp {
         break;
       case MenuMode::PowerSelect:
         applySelectedPower();
+        break;
+      case MenuMode::UpdateConfirm:
+        if (_updateInstallSelected) {
+          closeMenu();
+          runOtaUpdate();
+        } else {
+          closeMenu();
+        }
         break;
     }
   }
@@ -367,6 +383,31 @@ class BoseRemoteApp {
     _powerMenuIndex = _bose.state().poweredOn ? 1 : 0;
     _menuMode = MenuMode::PowerSelect;
     noteMenuInteraction();
+  }
+
+  void enterUpdateFlow() {
+    if (WiFi.status() != WL_CONNECTED) {
+      showOverlay("No WiFi", kActionOverlayMs);
+      closeMenu();
+      return;
+    }
+
+    // Blocking network check; show a holding screen first since the main loop
+    // is paused for the duration.
+    _ui.renderBusy("Checking update", "Contacting GitHub");
+    _ota.checkForUpdate();
+
+    if (_ota.status().updateAvailable) {
+      _updateInstallSelected = false;  // Default to the safe (Cancel) option.
+      resetMenuAnimation();
+      _menuMode = MenuMode::UpdateConfirm;
+      noteMenuInteraction();
+      return;
+    }
+
+    const String err = _ota.status().lastError;
+    showOverlay(err.isEmpty() ? "Up to date" : "OTA: " + err, kSourceOverlayMs);
+    closeMenu();
   }
 
   void closeMenu() {
@@ -514,6 +555,7 @@ class BoseRemoteApp {
         menu.items.push_back(makeMenuItem("Volume", true));
         menu.items.push_back(makeMenuItem("Source", true));
         menu.items.push_back(makeMenuItem("Power", true));
+        menu.items.push_back(makeMenuItem("Update", true));
         menu.selectedIndex = _mainMenuIndex;
         break;
       case MenuMode::VolumeEdit:
@@ -528,6 +570,9 @@ class BoseRemoteApp {
       case MenuMode::PowerSelect:
         menu.items = powerMenuItems();
         menu.selectedIndex = _powerMenuIndex;
+        break;
+      case MenuMode::UpdateConfirm:
+        // Rendered via renderUpdatePrompt(), not the carousel.
         break;
       case MenuMode::Idle:
         menu.title = "";
@@ -584,6 +629,11 @@ class BoseRemoteApp {
       statusHint = "Polling fallback active";
     }
 
+    if (_menuMode == MenuMode::UpdateConfirm) {
+      _ui.renderUpdatePrompt(_ota.status().latestVersion, _updateInstallSelected);
+      return;
+    }
+
     if (_menuMode != MenuMode::Idle) {
       updateMenuAnimation();
       _ui.renderMenu(view, wifiConnected, currentMenuModel(statusHint), statusHint);
@@ -627,6 +677,7 @@ class BoseRemoteApp {
   int _mainMenuIndex = 0;
   int _sourceMenuIndex = 0;
   int _powerMenuIndex = 0;
+  bool _updateInstallSelected = false;
   unsigned long _lastMenuInteractionMs = 0;
   bool _menuAnimationActive = false;
   int _menuPreviousIndex = 0;
