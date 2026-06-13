@@ -3,12 +3,23 @@
 #include <WiFi.h>
 
 namespace {
+// Inline favicon: a speaker with sound waves in the UI accent colour. Served
+// from /favicon.svg so no filesystem/asset partition is needed.
+const char kFaviconSvg[] PROGMEM =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>"
+    "<rect width='24' height='24' rx='6' fill='#0f766e'/>"
+    "<path d='M5 9.5h3l4-3.2v11.4l-4-3.2H5z' fill='#fff'/>"
+    "<path d='M14.8 8.6a4.4 4.4 0 0 1 0 6.8' fill='none' stroke='#fff' stroke-width='1.6' stroke-linecap='round'/>"
+    "<path d='M16.9 6.3a7.6 7.6 0 0 1 0 11.4' fill='none' stroke='#fff' stroke-width='1.6' stroke-linecap='round'/>"
+    "</svg>";
+
 String htmlTemplate(const String& title, const String& body) {
   String html;
   html.reserve(body.length() + 2500);
   html += "<!doctype html><html><head><meta charset='utf-8'>";
   html += "<meta name='viewport' content='width=device-width,initial-scale=1'>";
   html += "<title>" + title + "</title>";
+  html += "<link rel='icon' type='image/svg+xml' href='/favicon.svg'>";
   html += "<style>";
   html += ":root{color-scheme:light;--bg:#f4efe6;--panel:#fffaf1;--line:#d8cdb9;--text:#1c1917;";
   html += "--muted:#57534e;--accent:#0f766e;--danger:#b91c1c;--ok:#15803d;}";
@@ -29,7 +40,17 @@ String htmlTemplate(const String& title, const String& body) {
   html += ".source-btn.active{background:#115e59;color:#fff;border-color:#115e59}";
   html += ".slider-wrap{display:grid;gap:8px}.slider-row{display:flex;gap:12px;align-items:center}";
   html += "input[type=range]{width:100%}.footer{font-size:.92rem;color:var(--muted);margin-top:10px}";
-  html += ".offline{color:var(--danger)}.online{color:var(--ok)}@media (max-width:640px){";
+  html += ".offline{color:var(--danger)}.online{color:var(--ok)}";
+  html += ".overlay{position:fixed;inset:0;background:rgba(28,25,23,.85);display:flex;flex-direction:column;";
+  html += "align-items:center;justify-content:center;gap:18px;z-index:100;color:#fff;text-align:center;padding:24px;}";
+  html += ".overlay[hidden]{display:none}";
+  html += ".ring-wrap{position:relative;width:150px;height:150px}";
+  html += ".ring-wrap svg{transform:rotate(-90deg);width:150px;height:150px}";
+  html += ".ring-bg{fill:none;stroke:rgba(255,255,255,.16);stroke-width:9}";
+  html += ".ring-fg{fill:none;stroke:#5eead4;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1s linear}";
+  html += ".count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3.2rem;font-weight:800}";
+  html += ".overlay p{color:#e7e5e4;font-size:1.05rem;max-width:20rem;margin:0}";
+  html += "@media (max-width:640px){";
   html += ".controls,.status{grid-template-columns:1fr}}</style></head><body><main>";
   html += body;
   html += "</main></body></html>";
@@ -81,6 +102,10 @@ void ControlWebServer::registerRoutes() {
   _server.on("/api/ota", HTTP_GET, [this]() { handleOtaStatus(); });
   _server.on("/api/ota/check", HTTP_POST, [this]() { handleOtaCheck(); });
   _server.on("/api/ota/apply", HTTP_POST, [this]() { handleOtaApply(); });
+  _server.on("/favicon.svg", HTTP_GET, [this]() {
+    _server.sendHeader("Cache-Control", "max-age=86400");
+    _server.send_P(200, "image/svg+xml", kFaviconSvg);
+  });
   _server.onNotFound([this]() { _server.send(404, "text/plain", "Not found"); });
 }
 
@@ -226,6 +251,13 @@ String ControlWebServer::buildPage() const {
   body += "<button class='danger' id='fwApply' onclick='otaApply()' disabled>Update now</button>";
   body += "</div></section>";
 
+  body += "<div id='otaOverlay' class='overlay' hidden>";
+  body += "<div class='ring-wrap'><svg viewBox='0 0 150 150'>";
+  body += "<circle class='ring-bg' cx='75' cy='75' r='66'></circle>";
+  body += "<circle class='ring-fg' id='otaRing' cx='75' cy='75' r='66'></circle>";
+  body += "</svg><div class='count' id='otaCount'>30</div></div>";
+  body += "<p id='otaMsg'>Updating firmware &mdash; the device is rebooting. This page reloads automatically.</p></div>";
+
   body += "<script>";
   body += "const $=id=>document.getElementById(id);let volTimer=null;let lastState=null;";
   body += "function esc(s){return String(s==null?'':s).replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[m]));}";
@@ -260,9 +292,13 @@ String ControlWebServer::buildPage() const {
   body += "async function otaRefresh(){try{const r=await fetch('/api/ota');renderOta(await r.json());}catch(e){}}";
   body += "async function otaCheck(){$('fwMessage').textContent='Checking...';";
   body += "try{const r=await fetch('/api/ota/check',{method:'POST'});renderOta(await r.json());}catch(e){$('fwMessage').textContent='Check failed';}}";
+  body += "function startOtaCountdown(secs){const ov=$('otaOverlay');ov.hidden=false;";
+  body += "const ring=$('otaRing');const C=2*Math.PI*66;ring.style.strokeDasharray=C;ring.style.strokeDashoffset=0;let r=secs;";
+  body += "const tick=()=>{$('otaCount').textContent=r;ring.style.strokeDashoffset=C*(secs-r)/secs;";
+  body += "if(r<=0){$('otaMsg').textContent='Reloading...';location.reload();return;}r--;setTimeout(tick,1000);};tick();}";
   body += "async function otaApply(){if(!confirm('Download and flash the new firmware? The device will reboot.'))return;";
   body += "$('fwMessage').textContent='Starting update...';$('fwApply').disabled=true;";
-  body += "try{await fetch('/api/ota/apply',{method:'POST'});$('fwMessage').textContent='Updating, device will reboot. Reload in ~30s.';}catch(e){$('fwMessage').textContent='Update request failed';}}";
+  body += "try{await fetch('/api/ota/apply',{method:'POST'});startOtaCountdown(30);}catch(e){$('fwMessage').textContent='Update request failed';}}";
   body += "fetchState().catch(()=>{});setInterval(()=>fetchState().catch(()=>{}),2000);";
   body += "otaRefresh();</script>";
 

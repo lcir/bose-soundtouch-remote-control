@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ESPmDNS.h>
 #include <WiFi.h>
 
 #include "BoseClient.h"
@@ -36,6 +37,9 @@ constexpr const char* kSelectionAux3 = "AUX3";
 
 constexpr const char* kOtaOwner = "lcir";
 constexpr const char* kOtaRepo = "bose-soundtouch-remote-control";
+
+// Friendly name advertised to the network (DHCP hostname + mDNS .local).
+constexpr const char* kDeviceHostname = "Bose-SoundTouch-Remote";
 }  // namespace
 
 class BoseRemoteApp {
@@ -176,6 +180,9 @@ class BoseRemoteApp {
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.setAutoReconnect(true);
+    // Advertise a friendly DHCP hostname instead of the default "espress_xxxx".
+    // Must be set before begin() so it is sent in the DHCP request.
+    WiFi.setHostname(kDeviceHostname);
     WiFi.begin(_config.wifiSsid.c_str(), _config.wifiPassword.c_str());
     _lastWiFiAttemptMs = millis();
   }
@@ -195,16 +202,26 @@ class BoseRemoteApp {
     renderSetupUi();
   }
 
+  void startMdns() {
+    // Makes the device reachable as http://Bose-SoundTouch-Remote.local
+    MDNS.end();
+    if (MDNS.begin(kDeviceHostname)) {
+      MDNS.addService("http", "tcp", 80);
+    }
+  }
+
   void handleConnectivity() {
     const bool wifiConnected = WiFi.status() == WL_CONNECTED;
 
     if (wifiConnected && !_lastWifiConnected) {
       _lastWifiConnected = true;
+      startMdns();
       _controlWeb.start(_config);
       _lastBoseAttemptMs = millis();
       _bose.connect(_config);
     } else if (!wifiConnected && _lastWifiConnected) {
       _lastWifiConnected = false;
+      MDNS.end();
       _controlWeb.stop();
       _bose.disconnect();
     }
