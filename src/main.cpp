@@ -178,11 +178,15 @@ class BoseRemoteApp {
       return;
     }
 
+    // Advertise a friendly DHCP hostname instead of the default "espress_xxxx".
+    // Set it on BOTH sides of mode() on purpose: arduino-esp32 2.0.x (our pinned
+    // core) only honours it after WIFI_STA exists, while 3.x requires it before
+    // mode(). Calling twice is harmless and keeps the hostname working if the
+    // platform is ever bumped to 7.x. Must precede begin() so it lands in DHCP.
+    WiFi.setHostname(kDeviceHostname);
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.setAutoReconnect(true);
-    // Advertise a friendly DHCP hostname instead of the default "espress_xxxx".
-    // Must be set before begin() so it is sent in the DHCP request.
     WiFi.setHostname(kDeviceHostname);
     WiFi.begin(_config.wifiSsid.c_str(), _config.wifiPassword.c_str());
     _lastWiFiAttemptMs = millis();
