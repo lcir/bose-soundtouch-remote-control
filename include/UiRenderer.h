@@ -18,6 +18,7 @@ class UiRenderer {
                   const UiMenuModel& menu,
                   const String& statusHint);
   void renderSetup(const String& apName, const String& apIp, const String& message);
+  void renderUpdate(const String& title, int percent, const String& detail);
 
  private:
   String fitToWidth(const String& text, uint16_t width);

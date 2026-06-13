@@ -6,8 +6,17 @@
 #include "ConfigStore.h"
 #include "ControlWebServer.h"
 #include "InputController.h"
+#include "OtaUpdater.h"
 #include "PinConfig.h"
 #include "UiRenderer.h"
+
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "dev"
+#endif
+
+#ifndef OTA_ASSET
+#define OTA_ASSET "firmware.bin"
+#endif
 
 namespace {
 constexpr unsigned long kUiRefreshMs = 80;
@@ -24,6 +33,9 @@ constexpr const char* kSelectionBluetooth = "BLUETOOTH";
 constexpr const char* kSelectionAux1 = "AUX";
 constexpr const char* kSelectionAux2 = "AUX2";
 constexpr const char* kSelectionAux3 = "AUX3";
+
+constexpr const char* kOtaOwner = "lcir";
+constexpr const char* kOtaRepo = "bose-soundtouch-remote-control";
 }  // namespace
 
 class BoseRemoteApp {
@@ -35,6 +47,7 @@ class BoseRemoteApp {
     _inputs.begin();
     initPowerLed();
     _ui.begin(false);
+    _ota.begin(FIRMWARE_VERSION, kOtaOwner, kOtaRepo, OTA_ASSET);
 
     const bool forceSetup = _inputs.powerHeldDuringBoot(BOOT_SERVICE_HOLD_MS);
     if (!forceSetup && _configStore.load(_config)) {
@@ -57,6 +70,9 @@ class BoseRemoteApp {
     handleConnectivity();
     _bose.loop();
     _controlWeb.loop();
+    if (_controlWeb.consumeOtaApplyRequest()) {
+      runOtaUpdate();
+    }
     handleInputs();
     flushPendingVolume();
     updatePowerLed();
@@ -106,6 +122,25 @@ class BoseRemoteApp {
     const BoseState& state = _bose.state();
     const bool powerOn = state.connected && state.poweredOn;
     writeStatusLed(powerOn);
+  }
+
+  void runOtaUpdate() {
+    // Blocking: downloads + flashes, then reboots on success. We render progress
+    // straight to the OLED since the main loop is paused for the duration.
+    _bose.disconnect();
+    _ui.renderUpdate("Updating", 0, "Downloading...");
+
+    const bool ok = _ota.applyUpdate([this](int percent) {
+      _ui.renderUpdate("Updating", percent, "Do not power off");
+    });
+
+    // Only reached on failure (success reboots inside applyUpdate()).
+    if (!ok) {
+      _ui.renderUpdate("Update failed", 0, _ota.status().lastError);
+      showOverlay("Update failed", kSourceOverlayMs);
+      delay(3000);
+      _lastWifiConnected = false;  // Force reconnect/refresh on next loop.
+    }
   }
 
   void startSetupMode(const String& reason) {
@@ -558,7 +593,8 @@ class BoseRemoteApp {
   InputController _inputs;
   UiRenderer _ui;
   BoseClient _bose;
-  ControlWebServer _controlWeb{_bose};
+  OtaUpdater _ota;
+  ControlWebServer _controlWeb{_bose, _ota};
   CaptivePortal _portal;
 
   bool _setupMode = false;

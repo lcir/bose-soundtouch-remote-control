@@ -37,7 +37,8 @@ String htmlTemplate(const String& title, const String& body) {
 }
 }  // namespace
 
-ControlWebServer::ControlWebServer(BoseClient& boseClient) : _boseClient(boseClient), _server(80) {
+ControlWebServer::ControlWebServer(BoseClient& boseClient, OtaUpdater& ota)
+    : _boseClient(boseClient), _ota(ota), _server(80) {
   registerRoutes();
 }
 
@@ -77,7 +78,18 @@ void ControlWebServer::registerRoutes() {
   _server.on("/api/source/select", HTTP_POST, [this]() { handleSourceSelect(); });
   _server.on("/api/standby", HTTP_POST, [this]() { handleStandby(); });
   _server.on("/api/volume", HTTP_POST, [this]() { handleVolume(); });
+  _server.on("/api/ota", HTTP_GET, [this]() { handleOtaStatus(); });
+  _server.on("/api/ota/check", HTTP_POST, [this]() { handleOtaCheck(); });
+  _server.on("/api/ota/apply", HTTP_POST, [this]() { handleOtaApply(); });
   _server.onNotFound([this]() { _server.send(404, "text/plain", "Not found"); });
+}
+
+bool ControlWebServer::consumeOtaApplyRequest() {
+  if (!_otaApplyRequested) {
+    return false;
+  }
+  _otaApplyRequested = false;
+  return true;
 }
 
 void ControlWebServer::handleRoot() {
@@ -124,6 +136,46 @@ void ControlWebServer::handleVolume() {
   sendJsonResult(ok, ok ? String(value) : "Unable to set volume");
 }
 
+void ControlWebServer::handleOtaStatus() {
+  _server.send(200, "application/json; charset=utf-8", buildOtaJson());
+}
+
+void ControlWebServer::handleOtaCheck() {
+  _ota.checkForUpdate();
+  _server.send(200, "application/json; charset=utf-8", buildOtaJson());
+}
+
+void ControlWebServer::handleOtaApply() {
+  if (!_ota.status().updateAvailable) {
+    _server.send(409, "application/json; charset=utf-8",
+                 "{\"ok\":false,\"message\":\"No update available\"}");
+    return;
+  }
+  // Acknowledge now; the main loop performs the blocking flash + reboot so this
+  // response is actually delivered to the browser.
+  _otaApplyRequested = true;
+  _server.send(200, "application/json; charset=utf-8",
+               "{\"ok\":true,\"message\":\"Update starting, device will reboot\"}");
+}
+
+String ControlWebServer::buildOtaJson() const {
+  const OtaStatus& s = _ota.status();
+  String json = "{";
+  json += "\"currentVersion\":\"" + jsonEscape(s.currentVersion) + "\",";
+  json += "\"latestVersion\":\"" + jsonEscape(s.latestVersion) + "\",";
+  json += "\"updateAvailable\":";
+  json += s.updateAvailable ? "true" : "false";
+  json += ",\"checked\":";
+  json += s.checked ? "true" : "false";
+  json += ",\"checking\":";
+  json += s.checking ? "true" : "false";
+  json += ",\"applying\":";
+  json += s.applying ? "true" : "false";
+  json += ",\"error\":\"" + jsonEscape(s.lastError) + "\"";
+  json += "}";
+  return json;
+}
+
 void ControlWebServer::sendJsonState() {
   _server.send(200, "application/json; charset=utf-8", buildStateJson());
 }
@@ -164,6 +216,16 @@ String ControlWebServer::buildPage() const {
   body += "<section><h2>Available Sources</h2><div class='sources' id='sources'></div>";
   body += "<div class='footer'>This page updates automatically every 2 seconds.</div></section>";
 
+  body += "<section><h2>Firmware</h2><div class='status'>";
+  body += "<div class='chip'>Installed<span class='value' id='fwCurrent'>-</span></div>";
+  body += "<div class='chip'>Latest<span class='value' id='fwLatest'>-</span></div>";
+  body += "</div>";
+  body += "<p id='fwMessage' class='footer'>Check GitHub for a newer release.</p>";
+  body += "<div class='controls'>";
+  body += "<button class='secondary' id='fwCheck' onclick='otaCheck()'>Check for update</button>";
+  body += "<button class='danger' id='fwApply' onclick='otaApply()' disabled>Update now</button>";
+  body += "</div></section>";
+
   body += "<script>";
   body += "const $=id=>document.getElementById(id);let volTimer=null;let lastState=null;";
   body += "function esc(s){return String(s==null?'':s).replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[m]));}";
@@ -187,8 +249,22 @@ String ControlWebServer::buildPage() const {
   body += "$('sources').innerHTML=html||'<p>No sources available</p>';";
   body += "$('sources').querySelectorAll('button[data-source]').forEach(btn=>btn.onclick=()=>postAction('/api/source/select','id='+encodeURIComponent(btn.dataset.source)));}";
   body += "$('volumeSlider').addEventListener('input',e=>scheduleVolume(e.target.value));";
+  body += "function renderOta(o){$('fwCurrent').textContent=o.currentVersion||'-';";
+  body += "$('fwLatest').textContent=o.latestVersion||(o.checked?'-':'unknown');";
+  body += "const apply=$('fwApply');apply.disabled=!o.updateAvailable||o.applying;";
+  body += "$('fwCheck').disabled=o.checking||o.applying;";
+  body += "let msg='Check GitHub for a newer release.';";
+  body += "if(o.error)msg='Error: '+o.error;else if(o.applying)msg='Updating, device will reboot...';";
+  body += "else if(o.updateAvailable)msg='Update '+esc(o.latestVersion)+' available.';";
+  body += "else if(o.checked)msg='You are on the latest version.';$('fwMessage').textContent=msg;}";
+  body += "async function otaRefresh(){try{const r=await fetch('/api/ota');renderOta(await r.json());}catch(e){}}";
+  body += "async function otaCheck(){$('fwMessage').textContent='Checking...';";
+  body += "try{const r=await fetch('/api/ota/check',{method:'POST'});renderOta(await r.json());}catch(e){$('fwMessage').textContent='Check failed';}}";
+  body += "async function otaApply(){if(!confirm('Download and flash the new firmware? The device will reboot.'))return;";
+  body += "$('fwMessage').textContent='Starting update...';$('fwApply').disabled=true;";
+  body += "try{await fetch('/api/ota/apply',{method:'POST'});$('fwMessage').textContent='Updating, device will reboot. Reload in ~30s.';}catch(e){$('fwMessage').textContent='Update request failed';}}";
   body += "fetchState().catch(()=>{});setInterval(()=>fetchState().catch(()=>{}),2000);";
-  body += "</script>";
+  body += "otaRefresh();</script>";
 
   return htmlTemplate("Bose Remote", body);
 }
