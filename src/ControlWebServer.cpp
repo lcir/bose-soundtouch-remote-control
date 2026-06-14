@@ -288,7 +288,7 @@ String ControlWebServer::buildPage() const {
   body += "let msg='Check GitHub for a newer release.';";
   body += "if(o.error)msg='Error: '+o.error;else if(o.applying)msg='Updating, device will reboot...';";
   body += "else if(o.updateAvailable)msg='Update '+esc(o.latestVersion)+' available.';";
-  body += "else if(o.checked)msg='You are on the latest version.\n';$('fwMessage').textContent=msg;}";
+  body += "else if(o.checked)msg='You are on the latest version.\\n';$('fwMessage').textContent=msg;}";
   body += "async function otaRefresh(){try{const r=await fetch('/api/ota');renderOta(await r.json());}catch(e){}}";
   body += "async function otaCheck(){$('fwMessage').textContent='Checking...';";
   body += "try{const r=await fetch('/api/ota/check',{method:'POST'});renderOta(await r.json());}catch(e){$('fwMessage').textContent='Check failed';}}";
