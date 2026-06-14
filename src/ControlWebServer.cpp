@@ -39,7 +39,7 @@ String htmlTemplate(const String& title, const String& body) {
   html += ".source-btn{background:#e7f6f4;color:#115e59;border:1px solid #99f6e4}";
   html += ".source-btn.active{background:#115e59;color:#fff;border-color:#115e59}";
   html += ".slider-wrap{display:grid;gap:8px}.slider-row{display:flex;gap:12px;align-items:center}";
-  html += "input[type=range]{width:100%}.footer{font-size:.92rem;color:var(--muted);margin-top:10px}";
+  html += "input[type=range]{width:100%}.footer{font-size:.92rem;color:var(--muted);margin-top:10px;white-space:pre-line}";
   html += ".offline{color:var(--danger)}.online{color:var(--ok)}";
   html += ".overlay{position:fixed;inset:0;background:rgba(28,25,23,.85);display:flex;flex-direction:column;";
   html += "align-items:center;justify-content:center;gap:18px;z-index:100;color:#fff;text-align:center;padding:24px;}";
@@ -288,7 +288,7 @@ String ControlWebServer::buildPage() const {
   body += "let msg='Check GitHub for a newer release.';";
   body += "if(o.error)msg='Error: '+o.error;else if(o.applying)msg='Updating, device will reboot...';";
   body += "else if(o.updateAvailable)msg='Update '+esc(o.latestVersion)+' available.';";
-  body += "else if(o.checked)msg='You are on the latest version.';$('fwMessage').textContent=msg;}";
+  body += "else if(o.checked)msg='You are on the latest version.\n';$('fwMessage').textContent=msg;}";
   body += "async function otaRefresh(){try{const r=await fetch('/api/ota');renderOta(await r.json());}catch(e){}}";
   body += "async function otaCheck(){$('fwMessage').textContent='Checking...';";
   body += "try{const r=await fetch('/api/ota/check',{method:'POST'});renderOta(await r.json());}catch(e){$('fwMessage').textContent='Check failed';}}";
