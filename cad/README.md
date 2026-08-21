@@ -6,12 +6,14 @@ Kompaktní landscape varianta s `OLED` a knobem vedle sebe je v [compact_landsca
 
 ## Kompaktní landscape varianta
 
-Nová nízká varianta má vnější rozměry `88 x 34 x 44 mm`:
+Nová nízká varianta má vnější rozměry `88 x 34 x 38 mm`:
 
 - `OLED` vlevo
 - enkodér / knob vpravo
-- stavová `LED` pod `OLED`
-- `LOLIN/Wemos S2 Mini` uložený naležato vlevo uvnitř
+- bez samostatné stavové `LED`
+- `LOLIN/Wemos S2 Mini` uložený naležato v levé spodní kapsě za `OLED`
+- S2 Mini se zasouvá zezadu do bočních lišt, `USB-C` míří k zadnímu víku
+- kolečko je panelový rotační enkodér: tělo enkodéru je uvnitř, hřídel jde otvorem ven a knob je zvenku
 - zadní víko se `USB-C` výřezem, otevřeným spodním slotem pro kabel a ventilačními průřezy
 
 Vygenerované STL díly:
@@ -25,7 +27,7 @@ Vygenerované STL díly:
 - `body`: hlavní díl krabičky s integrovaným čelním panelem, dnem, ložem pro `LOLIN/Wemos S2 Mini`, OLED standoffy a zadním otevřeným servisním prostorem
 - `rear_lid`: zadní víko na `4x` šroubek s `USB-C` otvorem a otevřeným slotem pro vedení kabelu
 - `panel_layout`: tenký kontrolní výřez rozložení čelního panelu
-- `assembly`: vizuální sestava s referenčními bloky pro `OLED`, `S2 Mini`, enkodér a LED
+- `assembly`: vizuální sestava s referenčními bloky pro `OLED`, `S2 Mini`, enkodér a knob
 
 ## Výchozí mechanické předpoklady
 
@@ -34,9 +36,9 @@ Model je připravený pro:
 - `LOLIN/Wemos S2 Mini`
 - běžný `0.96" SSD1306 128x64 I2C OLED` modul
 - enkodér s panelovým závitem a zadním modulem podobným `LA132020`
-- jednu samostatnou stavovou LED se subtilním zapuštěným čelním otvorem `2.2 mm`
 
-Aktuální panel je kompaktní a všechny prvky jsou v jedné svislé ose: `OLED`, enkodér, `LED`.
+Původní svislý model používá stack `OLED`, enkodér, `LED`.
+Kompaktní landscape model používá pouze `OLED` a enkodér vedle sebe.
 
 Pokud se skutečné díly liší, uprav přímo horní parametry v `.scad`.
 
@@ -46,7 +48,6 @@ Před prvním finálním tiskem přeměř:
 
 - `oled_board`, `oled_hole_spacing`, `oled_window`
 - `encoder_panel_hole_d` a zadní obrys encoder modulu
-- `led_hole_d`, `led_relief_d`, `led_relief_depth`
 - `s2_board`, `usb_opening`, `usb_slot_center_z`
 
 ## Export

@@ -6,7 +6,7 @@ show_reference_hardware = true;
 // Low-profile landscape enclosure: OLED on the left, encoder knob on the right.
 outer_width = 88;
 outer_depth = 34;
-outer_height = 44;
+outer_height = 38;
 corner_radius = 5.0;
 wall = 2.2;
 bottom_thickness = 2.6;
@@ -15,7 +15,7 @@ rear_lid_thickness = 2.8;
 body_depth = outer_depth - rear_lid_thickness;
 
 // Front panel layout, measured in X/Z from the lower-left front corner.
-oled_center = [24.0, 26.5];
+oled_center = [24.0, 22.0];
 oled_window = [24.0, 13.0];
 oled_board = [27.4, 27.8];
 oled_hole_spacing = [23.2, 23.2];
@@ -23,23 +23,24 @@ oled_mount_hole_d = 2.2;
 oled_standoff_d = 5.6;
 oled_backoff_from_panel = 5.2;
 
-encoder_center = [64.0, 23.0];
+encoder_center = [64.0, 20.0];
 encoder_panel_hole_d = 7.4;
 encoder_relief_d = 15.5;
 encoder_relief_depth = 1.2;
-
-led_center = [24.0, 8.5];
-led_hole_d = 2.2;
-led_relief_d = 6.8;
-led_relief_depth = 1.6;
+encoder_body_d = 17.0;
+encoder_body_depth = 18.0;
+knob_d = 22.0;
+knob_depth = 14.0;
 
 // LOLIN/Wemos S2 Mini lying flat on a left-side tray, USB-C facing rear.
 s2_board = [34.6, 25.6, 1.6]; // x, y, z
 s2_origin = [7.0, 4.1, 5.0];
+s2_tray_clearance = 0.5;
+s2_tray_floor_h = 0.8;
 s2_rail_width = 2.8;
 s2_rail_capture = 1.1;
-s2_rail_gap = 0.5;
-s2_rear_stop_h = 4.0;
+s2_front_stop_h = 4.0;
+s2_front_stop_thickness = 2.0;
 
 usb_opening = [13.0, 8.0];
 usb_slot_center_x = s2_origin[0] + s2_board[0] / 2;
@@ -114,9 +115,6 @@ module front_panel_cutouts_2d() {
 
   translate(encoder_center)
     circle(d = encoder_panel_hole_d);
-
-  translate(led_center)
-    circle(d = led_hole_d);
 }
 
 module oled_standoffs() {
@@ -151,13 +149,6 @@ module front_panel_reliefs() {
     rotate([-90, 0, 0])
       cylinder(h = encoder_relief_depth + 0.1, d = encoder_relief_d);
 
-  translate([
-    led_center[0],
-    front_panel_thickness - led_relief_depth,
-    led_center[1]
-  ])
-    rotate([-90, 0, 0])
-      cylinder(h = led_relief_depth + 0.1, d = led_relief_d);
 }
 
 module rear_screw_bosses() {
@@ -192,14 +183,25 @@ module rear_screw_pilots() {
   }
 }
 
-module s2_tray() {
-  rail_y = s2_origin[1] + 1.3;
-  rail_len = s2_board[1] - 2.6;
+module s2_cradle() {
+  tray_size = [
+    s2_board[0] + 2 * s2_tray_clearance,
+    s2_board[1] + s2_tray_clearance
+  ];
+  tray_origin = [
+    s2_origin[0] - s2_tray_clearance,
+    s2_origin[1] - s2_tray_clearance
+  ];
+  rail_y = s2_origin[1] + s2_front_stop_thickness + 0.8;
+  rail_len = s2_board[1] - s2_front_stop_thickness - 1.6;
   rail_base_h = s2_origin[2] - bottom_thickness;
 
+  translate([tray_origin[0], tray_origin[1], bottom_thickness - 0.2])
+    cube([tray_size[0], tray_size[1], s2_tray_floor_h + 0.2]);
+
   for (x_pos = [
-    s2_origin[0],
-    s2_origin[0] + s2_board[0] + s2_rail_gap - s2_rail_width
+    s2_origin[0] - s2_tray_clearance,
+    s2_origin[0] + s2_board[0] + s2_tray_clearance - s2_rail_width
   ]) {
     translate([x_pos, rail_y, bottom_thickness - 0.2])
       cube([s2_rail_width, rail_len, rail_base_h + 0.2]);
@@ -208,12 +210,17 @@ module s2_tray() {
       cube([s2_rail_width, rail_len, s2_rail_capture]);
   }
 
+  // Front stop: the board slides in from the open rear and stops here.
   translate([
-    s2_origin[0],
-    s2_origin[1] + s2_board[1] - 1.4,
+    s2_origin[0] - s2_tray_clearance,
+    s2_origin[1] - s2_tray_clearance,
     bottom_thickness - 0.2
   ])
-    cube([s2_board[0] + s2_rail_gap, 1.8, s2_rear_stop_h + 0.2]);
+    cube([
+      s2_board[0] + 2 * s2_tray_clearance,
+      s2_front_stop_thickness,
+      s2_front_stop_h + 0.2
+    ]);
 }
 
 module cable_lane() {
@@ -244,7 +251,7 @@ module body() {
       body_shell();
       oled_standoffs();
       rear_screw_bosses();
-      s2_tray();
+      s2_cradle();
     }
 
     translate([0, -0.2, 0])
@@ -329,12 +336,12 @@ module reference_hardware() {
   color([0.75, 0.75, 0.75, 0.5])
     translate([encoder_center[0], front_panel_thickness, encoder_center[1]])
       rotate([-90, 0, 0])
-        cylinder(h = 18, d = 17);
+        cylinder(h = encoder_body_depth, d = encoder_body_d);
 
-  color([0.95, 0.2, 0.2, 0.45])
-    translate([led_center[0], front_panel_thickness, led_center[1]])
+  color([0.08, 0.08, 0.08, 0.65])
+    translate([encoder_center[0], -knob_depth, encoder_center[1]])
       rotate([-90, 0, 0])
-        cylinder(h = 4, d = 4.8);
+        cylinder(h = knob_depth, d = knob_d);
 }
 
 module assembly() {
