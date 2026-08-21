@@ -1,6 +1,24 @@
 # CAD návrh krabičky
 
-Parametrický návrh je v [bose_remote_enclosure.scad](/Users/peny/Development/Projects/boser-remote-control/cad/bose_remote_enclosure.scad).
+Parametrický návrh původní svislé krabičky je v [bose_remote_enclosure.scad](/Users/peny/Development/Projects/boser-remote-control/cad/bose_remote_enclosure.scad).
+
+Kompaktní landscape varianta s `OLED` a knobem vedle sebe je v [compact_landscape_enclosure.scad](compact_landscape_enclosure.scad).
+
+## Kompaktní landscape varianta
+
+Nová nízká varianta má vnější rozměry `88 x 34 x 44 mm`:
+
+- `OLED` vlevo
+- enkodér / knob vpravo
+- stavová `LED` pod `OLED`
+- `LOLIN/Wemos S2 Mini` uložený naležato vlevo uvnitř
+- zadní víko se `USB-C` výřezem, otevřeným spodním slotem pro kabel a ventilačními průřezy
+
+Vygenerované STL díly:
+
+- [compact-landscape-body.stl](compact-landscape-body.stl)
+- [compact-landscape-rear-lid.stl](compact-landscape-rear-lid.stl)
+- [compact-landscape-panel-layout.stl](compact-landscape-panel-layout.stl)
 
 ## Co model obsahuje
 
@@ -36,9 +54,17 @@ Před prvním finálním tiskem přeměř:
 Pokud máš nainstalovaný `OpenSCAD`, typický export je:
 
 ```bash
-openscad -D 'part=\"body\"' -o body.stl cad/bose_remote_enclosure.scad
-openscad -D 'part=\"rear_lid\"' -o rear-lid.stl cad/bose_remote_enclosure.scad
-openscad -D 'part=\"panel_layout\"' -o panel-layout.stl cad/bose_remote_enclosure.scad
+openscad -D 'part="body"' -o body.stl cad/bose_remote_enclosure.scad
+openscad -D 'part="rear_lid"' -o rear-lid.stl cad/bose_remote_enclosure.scad
+openscad -D 'part="panel_layout"' -o panel-layout.stl cad/bose_remote_enclosure.scad
+```
+
+Export kompaktní landscape varianty:
+
+```bash
+openscad -D 'part="body"' -o cad/compact-landscape-body.stl cad/compact_landscape_enclosure.scad
+openscad -D 'part="rear_lid"' -o cad/compact-landscape-rear-lid.stl cad/compact_landscape_enclosure.scad
+openscad -D 'part="panel_layout"' -o cad/compact-landscape-panel-layout.stl cad/compact_landscape_enclosure.scad
 ```
 
 ## Doporučení pro tisk
